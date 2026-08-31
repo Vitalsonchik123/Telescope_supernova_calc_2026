@@ -6,32 +6,35 @@
     <link rel="stylesheet" href="/static/styles/style.css">
 </head>
 <body>
-    <div class="tab-bar">
-        <a href="/feed?id={{ .telescope.ID }}">Лента</a>
-        <a href="/add">Добавить</a>
-        <a href="/grid">Плитка</a>
-    </div>
-
-    <div class="video-container">
-        <video src="{{ .telescope.VideoURL }}" autoplay muted loop></video>
-        <div class="overlay">
-            <h1>{{ .telescope.Name }}</h1>
-            <p>{{ .telescope.Observatory }}</p>
-            <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
-            <p>Фильтры: {{ range .telescope.Filters }}{{ . }} {{ end }}</p>
-            <p>Глубина: {{ .telescope.DepthMag }}</p>
-            <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
-            <p class="description">{{ .telescope.Description }}</p>
-            <!-- Место для никеля и энергии (пока заглушка) -->
-            <div class="sn-data">
-                <span>Ni-56: 0.55 M☉</span>
-                <span>Энергия: 1.2e51 эрг</span>
+    <div class="app-wrapper feed-wrapper">
+        <div class="video-container">
+            <video src="{{ .telescope.VideoURL }}" autoplay muted loop></video>
+            <div class="overlay">
+                <h1>{{ .telescope.Name }}</h1>
+                <p>{{ .telescope.Observatory }}</p>
+                <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
+                <p>Фильтры: {{ range .telescope.Filters }}{{ . }} {{ end }}</p>
+                <p>Глубина: {{ .telescope.DepthMag }}</p>
+                <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
+                <p class="description">{{ .telescope.Description }}</p>
+                <div class="sn-data">
+                    <span>Ni-56: 0.55 M☉</span>
+                    <span>Энергия: 1.2e51 эрг</span>
+                </div>
+                <div class="likes">
+                    <span class="heart">❤</span> {{ .telescope.Likes }}
+                </div>
+                <div class="nav-arrows">
+                    <a href="/feed?id={{ .telescope.ID }}&prev=true" class="arrow-btn" aria-label="Предыдущий">◀</a>
+                    <a href="/feed?id={{ .telescope.ID }}&next=true" class="arrow-btn" aria-label="Следующий">▶</a>
+                </div>
             </div>
-            <div class="likes">
-                <span class="heart">❤</span> {{ .telescope.Likes }}
-            </div>
-            <a href="/feed?id={{ .telescope.ID }}&next=true" class="next-btn">Следующий →</a>
         </div>
+    </div>
+    <div class="tab-bar">
+        <a href="/feed?id={{ .telescope.ID }}" class="active">Лента</a>
+        <a href="/add">Добавить</a>
+        <a href="/grid">Сетка</a>
     </div>
 </body>
 </html>

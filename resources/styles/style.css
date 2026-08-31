@@ -1,0 +1,445 @@
+/* --------------------------------------------
+   Переменные (цвета, шрифты, отступы)
+   -------------------------------------------- */
+:root {
+    --bg-page: #f2f2f7;          /* фон страницы (светло-серый) */
+    --bg-white: #ffffff;         /* белый фон карточек и панелей */
+    --text-primary: #1c1c1e;     /* основной тёмный текст */
+    --text-secondary: #6c6c70;   /* серый текст для подписей */
+    --accent: #007aff;           /* акцентный синий (используется редко) */
+    --border-radius: 12px;       /* скругление углов */
+    --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* --------------------------------------------
+   Общие сбросы и базовые стили
+   -------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-family);
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+}
+
+/* --------------------------------------------
+   Контейнер-обёртка для мобильного экрана (390px)
+   -------------------------------------------- */
+.app-wrapper {
+    width: 390px;
+    max-width: 100%;
+    background-color: var(--bg-page);
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+    margin: 0 auto;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+    padding-bottom: 70px;   /* отступ, чтобы контент не перекрывался нижней панелью */
+}
+
+/* Специальный класс для ленты – занимает всю высоту экрана, отступ не нужен */
+.app-wrapper.feed-wrapper {
+    height: 100vh;
+    min-height: unset;
+    padding-bottom: 0;
+}
+
+/* --------------------------------------------
+   Нижняя панель вкладок (Tab Bar)
+   -------------------------------------------- */
+.tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 390px;
+    max-width: 100%;
+    height: 70px;
+    background-color: #ffffff;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.08);
+    border-top: 1px solid #e5e5ea;
+    padding: 0 8px;
+}
+
+.tab-bar a {
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 8px;
+    min-width: 60px;
+    height: 50px;
+    transition: background 0.2s, color 0.2s;
+    background-color: #174B9B;
+    color: #ffffff;
+}
+
+/* Активная кнопка – белый фон, синий текст */
+.tab-bar a.active {
+    background-color: #ffffff;
+    color: #174B9B;
+    box-shadow: 0 0 0 1px #174B9B;
+}
+
+/* Иконки (псевдоэлементы) – белые для неактивных, синие для активной */
+.tab-bar a::before {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 24px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    filter: brightness(0) invert(1);
+}
+
+.tab-bar a.active::before {
+    filter: none;
+}
+
+/* Пример иконок (замените на свои) */
+.tab-bar a:nth-child(1)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3E%3C/svg%3E");
+}
+.tab-bar a:nth-child(2)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/%3E%3C/svg%3E");
+}
+.tab-bar a:nth-child(3)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z'/%3E%3C/svg%3E");
+}
+
+.tab-bar a:not(.active):hover {
+    background-color: #0f3a7a;
+}
+
+/* --------------------------------------------
+   Страница ЛЕНТЫ (feed)
+   -------------------------------------------- */
+.video-container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 70px);   /* вся высота экрана минус панель вкладок */
+    overflow: hidden;
+    background-color: #e5e5ea;
+}
+
+.video-container video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Оверлей поверх видео */
+.overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 20px 16px 16px;
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%);
+    color: #ffffff;
+}
+
+.overlay h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.overlay p {
+    font-size: 14px;
+    opacity: 0.9;
+    margin: 2px 0;
+}
+
+.overlay .description {
+    font-size: 13px;
+    opacity: 0.8;
+    margin: 6px 0;
+}
+
+/* Данные по никелю (заглушка) */
+.sn-data {
+    display: flex;
+    gap: 16px;
+    margin: 8px 0;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Лайки */
+.likes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    margin-top: 6px;
+}
+.heart {
+    color: #ff3b30;
+}
+
+/* Кнопки навигации (стрелки) */
+.nav-arrows {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 12px;
+    gap: 12px;
+}
+
+.arrow-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    color: #fff;
+    font-size: 24px;
+    text-decoration: none;
+    border-radius: 50%;
+    transition: background 0.2s, transform 0.2s;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.arrow-btn:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.05);
+}
+
+/* --------------------------------------------
+   Страница ДОБАВЛЕНИЯ (add)
+   -------------------------------------------- */
+.add-form {
+    padding: 16px;
+    background-color: var(--bg-white);
+    border-radius: var(--border-radius);
+    margin: 16px;
+    box-shadow: var(--shadow-card);
+}
+
+.media-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.image-upload,
+.video-upload {
+    background: #f2f2f7;
+    border: 2px dashed #c6c6c8;
+    border-radius: var(--border-radius);
+    padding: 12px;
+    text-align: center;
+}
+
+.image-upload img,
+.video-upload video {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.text-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.text-fields label {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: -4px;
+}
+
+.text-fields input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #f9f9fc;
+    transition: border-color 0.2s;
+}
+
+.text-fields input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.text-fields input:disabled {
+    opacity: 0.7;
+    background: #e9e9ed;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    justify-content: center;
+}
+
+.btn {
+    padding: 10px 28px;
+    border: none;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+}
+
+/* Кнопка "Подтвердить" – цвет #174B9B */
+.btn-confirm {
+    background-color: #174B9B;
+    color: #ffffff;
+}
+.btn-confirm:hover {
+    background-color: #0f3a7a;
+}
+
+/* Кнопка "Очистить" – серая */
+.btn-secondary {
+    background: #e5e5ea;
+    color: var(--text-primary);
+}
+.btn-secondary:hover {
+    background: #d1d1d6;
+}
+
+/* --------------------------------------------
+   Страница СЕТКИ (grid)
+   -------------------------------------------- */
+.filter-form {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 16px 16px 8px;
+    flex-wrap: wrap;
+}
+
+.filter-form .filter-label {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+.filter-form input[type="number"] {
+    width: 120px;
+    padding: 10px 12px;
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
+    font-size: 16px;
+    background: #f9f9fc;
+    flex-shrink: 0;
+}
+
+.filter-form button {
+    padding: 10px 20px;
+    background-color: #174B9B;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+.filter-form button:hover {
+    background-color: #0f3a7a;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 16px;
+}
+
+.card {
+    background: var(--bg-white);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card a {
+    text-decoration: none;
+    color: var(--text-primary);
+    display: block;
+    padding: 10px;
+}
+
+.card img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 8px 8px 0 0;
+}
+
+.card h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 8px 0 4px;
+}
+
+.card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin: 2px 0;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* --------------------------------------------
+   Адаптивность (для экранов шире 390px)
+   -------------------------------------------- */
+@media (min-width: 391px) {
+    .app-wrapper {
+        margin: 0 auto;
+        border-left: 1px solid #d1d1d6;
+        border-right: 1px solid #d1d1d6;
+    }
+    .app-wrapper.feed-wrapper {
+        height: 100vh;
+        min-height: unset;
+    }
+    .tab-bar {
+        left: 50%;
+        transform: translateX(-50%);
+    }
+}
