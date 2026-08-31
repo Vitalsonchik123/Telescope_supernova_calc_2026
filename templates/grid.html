@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Список телескопов</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body>
+    <div class="tab-bar">
+        <a href="/feed?id=ztf-001">Лента</a>
+        <a href="/add">Добавить</a>
+        <a href="/grid">Плитка</a>
+    </div>
+
+    <form action="/grid" method="GET" class="filter-form">
+        <input type="number" name="min_aperture" placeholder="Мин. диаметр (см)" value="{{ .minAperture }}">
+        <button type="submit">Применить</button>
+    </form>
+
+    <div class="grid-container">
+        {{ range .telescopes }}
+            <div class="card">
+                <a href="/feed?id={{ .ID }}">
+                    <img src="{{ .ImageURL }}" alt="{{ .Name }}">
+                    <h3>{{ .Name }}</h3>
+                    <p>❤ {{ .Likes }}</p>
+                    <p>Диаметр: {{ .ApertureCm }} см</p>
+                    <p>Поле зрения: {{ .FovDeg }}°</p>
+                </a>
+            </div>
+        {{ else }}
+            <p>Нет телескопов, удовлетворяющих фильтру.</p>
+        {{ end }}
+    </div>
+</body>
+</html>

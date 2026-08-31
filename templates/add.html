@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Добавление заявки</title>
+    <link rel="stylesheet" href="/static/styles/style.css">
+</head>
+<body>
+    <div class="tab-bar">
+        <a href="/feed?id={{ .telescope.ID }}">Лента</a>
+        <a href="/add">Добавить</a>
+        <a href="/grid">Плитка</a>
+    </div>
+
+    <div class="add-form">
+        <div class="media-fields">
+            <div class="image-upload">
+                <img src="{{ .telescope.ImageURL }}" alt="Изображение" style="max-width: 100%;">
+                <input type="file" disabled>
+            </div>
+            <div class="video-upload">
+                <video src="{{ .telescope.VideoURL }}" controls style="max-width: 100%;"></video>
+                <input type="file" disabled>
+            </div>
+        </div>
+        <div class="text-fields">
+            <label>Название</label>
+            <input type="text" value="{{ .telescope.Name }}" disabled>
+            <label>Обсерватория</label>
+            <input type="text" value="{{ .telescope.Observatory }}" disabled>
+            <label>Диаметр (см)</label>
+            <input type="number" value="{{ .telescope.ApertureCm }}" disabled>
+            <label>Поле зрения</label>
+            <input type="text" value="{{ .telescope.FovDeg }}" disabled>
+            <label>Глубина</label>
+            <input type="text" value="{{ .telescope.DepthMag }}" disabled>
+            <label>Врем. разрешение</label>
+            <input type="text" value="{{ .telescope.TimeResolution }}" disabled>
+            <label>Дата наблюдения</label>
+            <input type="date" value="2025-10-01" disabled>
+            <button type="submit" disabled>Отправить (без сохранения)</button>
+        </div>
+    </div>
+</body>
+</html>
