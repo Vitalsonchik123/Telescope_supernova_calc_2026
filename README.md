@@ -1,0 +1,1 @@
+# Telescope_supernova_calc_2026
