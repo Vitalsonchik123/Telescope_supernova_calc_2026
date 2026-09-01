@@ -2,19 +2,16 @@
    Переменные (цвета, шрифты, отступы)
    -------------------------------------------- */
 :root {
-    --bg-page: #f2f2f7;          /* фон страницы (светло-серый) */
-    --bg-white: #ffffff;         /* белый фон карточек и панелей */
-    --text-primary: #1c1c1e;     /* основной тёмный текст */
-    --text-secondary: #6c6c70;   /* серый текст для подписей */
-    --accent: #007aff;           /* акцентный синий (используется редко) */
-    --border-radius: 12px;       /* скругление углов */
+    --bg-page: #f2f2f7;
+    --bg-white: #ffffff;
+    --text-primary: #1c1c1e;
+    --text-secondary: #6c6c70;
+    --accent: #007aff;
+    --border-radius: 12px;
     --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.08);
     --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* --------------------------------------------
-   Общие сбросы и базовые стили
-   -------------------------------------------- */
 * {
     margin: 0;
     padding: 0;
@@ -34,7 +31,7 @@ body {
 }
 
 /* --------------------------------------------
-   Контейнер-обёртка для мобильного экрана (390px)
+   Контейнер-обёртка – отступ снизу 143px
    -------------------------------------------- */
 .app-wrapper {
     width: 390px;
@@ -45,10 +42,10 @@ body {
     overflow-y: auto;
     margin: 0 auto;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
-    padding-bottom: 70px;   /* отступ, чтобы контент не перекрывался нижней панелью */
+    padding-bottom: 143px;
 }
 
-/* Специальный класс для ленты – занимает всю высоту экрана, отступ не нужен */
+/* Для ленты – полная высота, отступ не нужен */
 .app-wrapper.feed-wrapper {
     height: 100vh;
     min-height: unset;
@@ -56,7 +53,7 @@ body {
 }
 
 /* --------------------------------------------
-   Нижняя панель вкладок (Tab Bar)
+   Нижняя панель вкладок – высота 143px, кнопки 85x85
    -------------------------------------------- */
 .tab-bar {
     position: fixed;
@@ -65,7 +62,7 @@ body {
     transform: translateX(-50%);
     width: 390px;
     max-width: 100%;
-    height: 70px;
+    height: 143px;
     background-color: #ffffff;
     display: flex;
     justify-content: space-around;
@@ -87,21 +84,20 @@ body {
     font-weight: 500;
     padding: 6px 12px;
     border-radius: 8px;
-    min-width: 60px;
-    height: 50px;
+    min-width: 85px;
+    height: 85px;
+    width: 85px;
     transition: background 0.2s, color 0.2s;
     background-color: #174B9B;
     color: #ffffff;
 }
 
-/* Активная кнопка – белый фон, синий текст */
 .tab-bar a.active {
     background-color: #ffffff;
     color: #174B9B;
     box-shadow: 0 0 0 1px #174B9B;
 }
 
-/* Иконки (псевдоэлементы) – белые для неактивных, синие для активной */
 .tab-bar a::before {
     content: "";
     display: block;
@@ -117,7 +113,6 @@ body {
     filter: none;
 }
 
-/* Пример иконок (замените на свои) */
 .tab-bar a:nth-child(1)::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3E%3C/svg%3E");
 }
@@ -138,7 +133,7 @@ body {
 .video-container {
     position: relative;
     width: 100%;
-    height: calc(100vh - 70px);   /* вся высота экрана минус панель вкладок */
+    height: calc(100vh - 143px);
     overflow: hidden;
     background-color: #e5e5ea;
 }
@@ -150,7 +145,6 @@ body {
     display: block;
 }
 
-/* Оверлей поверх видео */
 .overlay {
     position: absolute;
     bottom: 0;
@@ -165,6 +159,7 @@ body {
     font-size: 24px;
     font-weight: 700;
     margin-bottom: 4px;
+    color: #FF9400;
 }
 
 .overlay p {
@@ -179,7 +174,6 @@ body {
     margin: 6px 0;
 }
 
-/* Данные по никелю (заглушка) */
 .sn-data {
     display: flex;
     gap: 16px;
@@ -188,19 +182,18 @@ body {
     font-weight: 600;
 }
 
-/* Лайки */
 .likes {
     display: flex;
     align-items: center;
     gap: 6px;
     font-size: 18px;
     margin-top: 6px;
+    color: #FF9400;
 }
 .heart {
-    color: #ff3b30;
+    color: #FF9400;
 }
 
-/* Кнопки навигации (стрелки) */
 .nav-arrows {
     display: flex;
     justify-content: space-between;
@@ -208,25 +201,20 @@ body {
     gap: 12px;
 }
 
+/* НОВЫЕ СТРЕЛКИ – без кружков, крупные */
 .arrow-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 44px;
-    height: 44px;
-    background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(4px);
-    color: #fff;
-    font-size: 24px;
+    font-size: 40px;
+    color: #FF9400;
     text-decoration: none;
-    border-radius: 50%;
-    transition: background 0.2s, transform 0.2s;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: transform 0.2s;
+    padding: 0 12px;
 }
 
 .arrow-btn:hover {
-    background: rgba(255, 255, 255, 0.4);
-    transform: scale(1.05);
+    transform: scale(1.2);
 }
 
 /* --------------------------------------------
@@ -313,7 +301,6 @@ body {
     transition: background 0.2s, transform 0.1s;
 }
 
-/* Кнопка "Подтвердить" – цвет #174B9B */
 .btn-confirm {
     background-color: #174B9B;
     color: #ffffff;
@@ -322,7 +309,6 @@ body {
     background-color: #0f3a7a;
 }
 
-/* Кнопка "Очистить" – серая */
 .btn-secondary {
     background: #e5e5ea;
     color: var(--text-primary);

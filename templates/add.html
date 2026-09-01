@@ -35,6 +35,10 @@
                     <label>Поле зрения</label>
                     <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
 
+                    <!-- НОВОЕ ПОЛЕ: Фильтры (сразу после поля зрения) -->
+                    <label>Фильтры</label>
+                    <input type="text" name="filters" value="{{ range .telescope.Filters }}{{ . }} {{ end }}">
+
                     <label>Глубина</label>
                     <input type="text" name="depth" value="{{ .telescope.DepthMag }}">
 
