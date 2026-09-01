@@ -201,7 +201,6 @@ body {
     gap: 12px;
 }
 
-/* НОВЫЕ СТРЕЛКИ – без кружков, крупные */
 .arrow-btn {
     display: inline-flex;
     align-items: center;
@@ -215,6 +214,49 @@ body {
 
 .arrow-btn:hover {
     transform: scale(1.2);
+}
+
+/* --------------------------------------------
+   Кнопка "ещё..." в ленте
+   -------------------------------------------- */
+.description-details {
+    margin: 6px 0;
+}
+
+.description-details summary {
+    display: inline-block;
+    cursor: pointer;
+    color: #FF9400;
+    font-weight: 600;
+    font-size: 14px;
+    list-style: none;
+    outline: none;
+    user-select: none;
+}
+
+.description-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.description-details .more {
+    display: inline;
+}
+.description-details .less {
+    display: none;
+}
+
+.description-details[open] .more {
+    display: none;
+}
+.description-details[open] .less {
+    display: inline;
+}
+
+.description-details .description {
+    margin-top: 6px;
+    font-size: 14px;
+    opacity: 0.9;
+    line-height: 1.4;
 }
 
 /* --------------------------------------------

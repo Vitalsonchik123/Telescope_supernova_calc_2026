@@ -12,11 +12,21 @@
             <div class="overlay">
                 <h1>{{ .telescope.Name }}</h1>
                 <p>{{ .telescope.Observatory }}</p>
-                <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
-                <p>Фильтры: {{ range .telescope.Filters }}{{ . }} {{ end }}</p>
-                <p>Глубина: {{ .telescope.DepthMag }}</p>
-                <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
-                <p class="description">{{ .telescope.Description }}</p>
+
+                <!-- Скрываемые детали (диаметр, фильтры, глубина, время, описание) -->
+                <details class="description-details">
+                    <summary>
+                        <span class="more">ещё...</span>
+                        <span class="less">меньше</span>
+                    </summary>
+                    <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
+                    <p>Фильтры: {{ range .telescope.Filters }}{{ . }} {{ end }}</p>
+                    <p>Глубина: {{ .telescope.DepthMag }}</p>
+                    <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
+                    <p class="description">{{ .telescope.Description }}</p>
+                </details>
+
+                <!-- Постоянно видимые элементы (никель, лайки, стрелки) -->
                 <div class="sn-data">
                     <span>Ni-56: 0.55 M☉</span>
                     <span>Энергия: 1.2e51 эрг</span>
