@@ -35,7 +35,6 @@
                     <label>Поле зрения</label>
                     <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
 
-                    <!-- НОВОЕ ПОЛЕ: Фильтры (сразу после поля зрения) -->
                     <label>Фильтры</label>
                     <input type="text" name="filters" value="{{ range .telescope.Filters }}{{ . }} {{ end }}">
 
@@ -58,7 +57,7 @@
     <div class="tab-bar">
         <a href="/feed?id={{ .telescope.ID }}">Лента</a>
         <a href="/add" class="active">Добавить</a>
-        <a href="/grid">Сетка</a>
+        <a href="/grid">Плитка</a>
     </div>
 </body>
 </html>

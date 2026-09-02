@@ -13,7 +13,6 @@
                 <h1>{{ .telescope.Name }}</h1>
                 <p>{{ .telescope.Observatory }}</p>
 
-                <!-- Скрываемые детали (диаметр, фильтры, глубина, время, описание) -->
                 <details class="description-details">
                     <summary>
                         <span class="more">ещё...</span>
@@ -26,7 +25,6 @@
                     <p class="description">{{ .telescope.Description }}</p>
                 </details>
 
-                <!-- Постоянно видимые элементы (никель, лайки, стрелки) -->
                 <div class="sn-data">
                     <span>Ni-56: 0.55 M☉</span>
                     <span>Энергия: 1.2e51 эрг</span>
@@ -44,7 +42,7 @@
     <div class="tab-bar">
         <a href="/feed?id={{ .telescope.ID }}" class="active">Лента</a>
         <a href="/add">Добавить</a>
-        <a href="/grid">Сетка</a>
+        <a href="/grid">Плитка</a>
     </div>
 </body>
 </html>

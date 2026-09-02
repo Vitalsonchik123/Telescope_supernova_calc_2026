@@ -28,6 +28,7 @@ body {
     min-height: 100vh;
     padding: 0;
     margin: 0;
+    overflow-y: scroll; /* фиксируем скроллбар */
 }
 
 /* --------------------------------------------
@@ -360,42 +361,42 @@ body {
 }
 
 /* --------------------------------------------
-   Страница СЕТКИ (grid)
+   Страница ПЛИТКИ (grid) – квадратные картинки, компактные карточки
    -------------------------------------------- */
 .filter-form {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 16px 16px 8px;
+    gap: 6px;               /* уменьшен gap */
+    padding: 4px 16px 4px;  /* уменьшены отступы */
     flex-wrap: wrap;
 }
 
 .filter-form .filter-label {
-    font-size: 16px;
+    font-size: 16px;        /* без изменений */
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
 }
 
 .filter-form input[type="number"] {
-    width: 120px;
-    padding: 10px 12px;
+    width: 100px;           /* уменьшена ширина */
+    padding: 4px 6px;       /* уменьшены внутренние отступы */
     border: 1px solid #d1d1d6;
     border-radius: 8px;
-    font-size: 16px;
+    font-size: 16px;        /* без изменений */
     background: #f9f9fc;
     flex-shrink: 0;
 }
 
 .filter-form button {
-    padding: 10px 20px;
+    padding: 4px 12px;      /* уменьшены отступы */
     background-color: #174B9B;
     color: #ffffff;
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 16px;        /* без изменений */
     cursor: pointer;
     transition: background 0.2s;
     white-space: nowrap;
@@ -407,8 +408,8 @@ body {
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 16px;
+    gap: 6px;               /* минимальный промежуток */
+    padding: 6px;           /* минимальный отступ */
 }
 
 .card {
@@ -428,26 +429,26 @@ body {
     text-decoration: none;
     color: var(--text-primary);
     display: block;
-    padding: 10px;
+    padding: 4px;           /* минимальный внутренний отступ */
 }
 
 .card img {
     width: 100%;
-    aspect-ratio: 1 / 1;
+    aspect-ratio: 1 / 1;    /* квадратное изображение */
     object-fit: cover;
     border-radius: 8px 8px 0 0;
 }
 
 .card h3 {
-    font-size: 15px;
+    font-size: 15px;        /* без изменений */
     font-weight: 600;
-    margin: 8px 0 4px;
+    margin: 4px 0 2px;      /* уменьшены отступы */
 }
 
 .card p {
-    font-size: 13px;
+    font-size: 13px;        /* без изменений */
     color: var(--text-secondary);
-    margin: 2px 0;
+    margin: 1px 0;          /* уменьшены отступы */
     display: flex;
     align-items: center;
     gap: 4px;
