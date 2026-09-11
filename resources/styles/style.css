@@ -544,3 +544,9 @@ body {
         transform: translateX(-50%);
     }
 }
+
+.tab-bar {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}

@@ -24,7 +24,6 @@
                         <input type="file" disabled>
                     </div>
                 </div>
-                <!-- остальные поля без изменений -->
                 <div class="text-fields">
                     <label>Название</label>
                     <input type="text" name="name" value="{{ .telescope.Name }}">
@@ -39,7 +38,7 @@
                     <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
 
                     <label>Фильтры</label>
-                    <input type="text" name="filters" value="{{ range .telescope.Filters }}{{ . }} {{ end }}">
+                    <input type="text" name="filters" value="{{ .telescope.Filters }}">
 
                     <label>Глубина</label>
                     <input type="text" name="depth" value="{{ .telescope.DepthMag }}">
@@ -58,7 +57,7 @@
         </div>
     </div>
     <div class="tab-bar">
-        <a href="/feed?id={{ .telescope.ID }}">Лента</a>
+        <a href="/grid">Лента</a>
         <a href="/add" class="active">Добавить</a>
         <a href="/grid">Плитка</a>
     </div>

@@ -24,7 +24,7 @@
                         <span class="less">меньше</span>
                     </summary>
                     <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
-                    <p>Фильтры: {{ range .telescope.Filters }}{{ . }} {{ end }}</p>
+                    <p>Фильтры: {{ range .telescope.FiltersSlice }}{{ . }} {{ end }}</p>
                     <p>Глубина: {{ .telescope.DepthMag }}</p>
                     <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
                     <p class="description">{{ .telescope.Description }}</p>

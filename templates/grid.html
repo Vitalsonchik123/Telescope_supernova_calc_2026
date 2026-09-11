@@ -23,11 +23,11 @@
         <div class="grid-container">
             {{ range .telescopes }}
                 <div class="card">
-                    <a href="/feed?id={{ .ID }}">
-                        <img src="{{ .ImageURL }}" alt="{{ .Name }}">
-                        <h3>{{ .Name }}</h3>
+                    <a href="/feed?id={{ .Telescope.ID }}">
+                        <img src="{{ .ImageURL }}" alt="{{ .Telescope.Name }}">
+                        <h3>{{ .Telescope.Name }}</h3>
                         <p>❤ {{ .Likes }}</p>
-                        <p>Диаметр: {{ .ApertureCm }} см</p>
+                        <p>Диаметр: {{ .Telescope.ApertureCm }} см</p>
                     </a>
                 </div>
             {{ else }}
@@ -36,7 +36,7 @@
         </div>
     </div>
     <div class="tab-bar">
-        <a href="/feed?id=ztf-001">Лента</a>
+        <a href="/feed?id=1">Лента</a>
         <a href="/add">Добавить</a>
         <a href="/grid" class="active">Плитка</a>
     </div>

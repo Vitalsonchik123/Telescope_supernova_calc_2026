@@ -1,31 +1,37 @@
 package api
 
 import (
-    "log"
-    "github.com/gin-gonic/gin"
-    "github.com/sirupsen/logrus"
-    "supernova-calc/internal/app/handler"
-    "supernova-calc/internal/app/repository"
+	"log"
+
+	"github.com/gin-gonic/gin"
+
+	"supernova-calc/internal/app/database"
+	"supernova-calc/internal/app/handler"
+	"supernova-calc/internal/app/repository"
 )
 
 func StartServer() {
-    log.Println("Starting server...")
+	log.Println("Starting server...")
 
-    repo, err := repository.NewRepository()
-    if err != nil {
-        logrus.Fatal("Ошибка инициализации репозитория:", err)
-    }
+	// Инициализация БД (AutoMigrate)
+	database.InitDB()
 
-    h := handler.NewHandler(repo)
+	repo := repository.NewRepository(database.DB)
+	h := handler.NewHandler(repo)
 
-    r := gin.Default()
-    r.LoadHTMLGlob("templates/*")
-    r.Static("/static", "./resources")
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
+	r.Static("/static", "./resources")
 
-    r.GET("/feed", h.FeedHandler)
-    r.GET("/add", h.DraftHandler)
-    r.GET("/grid", h.GridHandler)
+	r.GET("/feed", h.FeedHandler)
+	r.GET("/add", h.DraftHandler)
+	r.GET("/grid", h.GridHandler)
 
-    r.Run()
-    log.Println("Server down")
+	// POST-маршруты для ЛР2
+	r.POST("/create-draft", h.CreateDraftHandler)
+	r.POST("/publish", h.PublishHandler)
+	r.POST("/delete", h.DeleteHandler)
+
+	r.Run()
+	log.Println("Server down")
 }
