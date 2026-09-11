@@ -114,6 +114,7 @@ body {
     filter: none;
 }
 
+/* Иконки (замените при необходимости) */
 .tab-bar a:nth-child(1)::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3E%3C/svg%3E");
 }
@@ -156,10 +157,31 @@ body {
     color: #ffffff;
 }
 
-.overlay h1 {
+/* Строка с названием и лайками */
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.title-row h1 {
     font-size: 24px;
     font-weight: 700;
-    margin-bottom: 4px;
+    color: #FF9400;
+    margin: 0;
+}
+
+.title-row .likes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 20px;
+    color: #FF9400;
+    margin: 0;
+}
+
+.title-row .heart {
     color: #FF9400;
 }
 
@@ -181,18 +203,6 @@ body {
     margin: 8px 0;
     font-size: 14px;
     font-weight: 600;
-}
-
-.likes {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 18px;
-    margin-top: 6px;
-    color: #FF9400;
-}
-.heart {
-    color: #FF9400;
 }
 
 .nav-arrows {
@@ -217,9 +227,7 @@ body {
     transform: scale(1.2);
 }
 
-/* --------------------------------------------
-   Кнопка "ещё..." в ленте
-   -------------------------------------------- */
+/* Кнопка "ещё..." */
 .description-details {
     margin: 6px 0;
 }
@@ -261,7 +269,7 @@ body {
 }
 
 /* --------------------------------------------
-   Страница ДОБАВЛЕНИЯ (add)
+   Страница ДОБАВЛЕНИЯ (add) – компактные файлы
    -------------------------------------------- */
 .add-form {
     padding: 16px;
@@ -274,24 +282,36 @@ body {
 .media-fields {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
-.image-upload,
-.video-upload {
+.media-fields .image-upload,
+.media-fields .video-upload {
     background: #f2f2f7;
-    border: 2px dashed #c6c6c8;
+    border: 1px solid #c6c6c8;
     border-radius: var(--border-radius);
-    padding: 12px;
-    text-align: center;
+    padding: 8px 12px;
+    text-align: left;
 }
 
-.image-upload img,
-.video-upload video {
-    max-width: 100%;
-    border-radius: 8px;
-    margin-bottom: 8px;
+.media-fields .file-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    padding: 4px 0;
+}
+
+.media-fields .file-row .file-name {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.media-fields input[type="file"] {
+    margin-top: 4px;
+    width: 100%;
+    font-size: 13px;
 }
 
 .text-fields {
@@ -361,55 +381,95 @@ body {
 }
 
 /* --------------------------------------------
-   Страница ПЛИТКИ (grid) – квадратные картинки, компактные карточки
+   Страница ПЛИТКИ (grid) – слайдер и карточки
    -------------------------------------------- */
 .filter-form {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;               /* уменьшен gap */
-    padding: 4px 16px 4px;  /* уменьшены отступы */
+    gap: 12px;
+    padding: 8px 16px 4px;
     flex-wrap: wrap;
 }
 
-.filter-form .filter-label {
-    font-size: 16px;        /* без изменений */
+.slider-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f9f9fc;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid #d1d1d6;
+}
+
+.slider-container label {
+    font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
 }
 
-.filter-form input[type="number"] {
-    width: 100px;           /* уменьшена ширина */
-    padding: 4px 6px;       /* уменьшены внутренние отступы */
-    border: 1px solid #d1d1d6;
-    border-radius: 8px;
-    font-size: 16px;        /* без изменений */
-    background: #f9f9fc;
-    flex-shrink: 0;
+.slider-container input[type="range"] {
+    width: 140px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #174B9B;
+    border-radius: 2px;
+    outline: none;
 }
 
-.filter-form button {
-    padding: 4px 12px;      /* уменьшены отступы */
+.slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    background: #174B9B;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.slider-container input[type="range"]::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    background: #174B9B;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid white;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+
+.slider-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #174B9B;
+    min-width: 40px;
+    text-align: center;
+}
+
+.filter-btn {
+    padding: 6px 18px;
     background-color: #174B9B;
     color: #ffffff;
     border: none;
     border-radius: 8px;
     font-weight: 600;
-    font-size: 16px;        /* без изменений */
+    font-size: 16px;
     cursor: pointer;
     transition: background 0.2s;
     white-space: nowrap;
 }
-.filter-form button:hover {
+.filter-btn:hover {
     background-color: #0f3a7a;
 }
 
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 6px;               /* минимальный промежуток */
-    padding: 6px;           /* минимальный отступ */
+    gap: 4px;
+    padding: 4px;
 }
 
 .card {
@@ -429,29 +489,41 @@ body {
     text-decoration: none;
     color: var(--text-primary);
     display: block;
-    padding: 4px;           /* минимальный внутренний отступ */
+    padding: 2px;
 }
 
 .card img {
     width: 100%;
-    aspect-ratio: 1 / 1;    /* квадратное изображение */
+    aspect-ratio: 1 / 1;
     object-fit: cover;
     border-radius: 8px 8px 0 0;
 }
 
 .card h3 {
-    font-size: 15px;        /* без изменений */
+    font-size: 15px;
     font-weight: 600;
-    margin: 4px 0 2px;      /* уменьшены отступы */
+    margin: 2px 0 0;
 }
 
 .card p {
-    font-size: 13px;        /* без изменений */
+    font-size: 13px;
     color: var(--text-secondary);
-    margin: 1px 0;          /* уменьшены отступы */
+    margin: 1px 0;
     display: flex;
     align-items: center;
     gap: 4px;
+}
+
+/* Общие стили для лайков (используются в плитке) */
+.likes {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 18px;
+    color: #FF9400;
+}
+.heart {
+    color: #FF9400;
 }
 
 /* --------------------------------------------

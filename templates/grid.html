@@ -7,9 +7,18 @@
 <body>
     <div class="app-wrapper">
         <form action="/grid" method="GET" class="filter-form">
-            <span class="filter-label">Фильтр:</span>
-            <input type="number" name="min_aperture" placeholder="Мин. диаметр (см)" value="{{ .minAperture }}">
-            <button type="submit">Применить</button>
+            <div class="slider-container">
+                <label for="aperture-slider">Диаметр от (см):</label>
+                <input type="range"
+                       id="aperture-slider"
+                       name="min_aperture"
+                       min="0"
+                       max="1200"
+                       step="1"
+                       value="{{ .minAperture }}">
+                <span class="slider-value">{{ .minAperture }}</span>
+            </div>
+            <button type="submit" class="filter-btn">Применить</button>
         </form>
         <div class="grid-container">
             {{ range .telescopes }}
@@ -29,7 +38,7 @@
     <div class="tab-bar">
         <a href="/feed?id=ztf-001">Лента</a>
         <a href="/add">Добавить</a>
-        <a href="/grid" class="active">Плитка</a>   <!-- заменено -->
+        <a href="/grid" class="active">Плитка</a>
     </div>
 </body>
 </html>

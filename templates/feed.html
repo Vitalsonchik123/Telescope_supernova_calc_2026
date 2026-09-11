@@ -10,7 +10,12 @@
         <div class="video-container">
             <video src="{{ .telescope.VideoURL }}" autoplay muted loop></video>
             <div class="overlay">
-                <h1>{{ .telescope.Name }}</h1>
+                <div class="title-row">
+                    <h1>{{ .telescope.Name }}</h1>
+                    <div class="likes">
+                        <span class="heart">❤</span> {{ .telescope.Likes }}
+                    </div>
+                </div>
                 <p>{{ .telescope.Observatory }}</p>
 
                 <details class="description-details">
@@ -29,9 +34,7 @@
                     <span>Ni-56: 0.55 M☉</span>
                     <span>Энергия: 1.2e51 эрг</span>
                 </div>
-                <div class="likes">
-                    <span class="heart">❤</span> {{ .telescope.Likes }}
-                </div>
+
                 <div class="nav-arrows">
                     <a href="/feed?id={{ .telescope.ID }}&prev=true" class="arrow-btn" aria-label="Предыдущий">←</a>
                     <a href="/feed?id={{ .telescope.ID }}&next=true" class="arrow-btn" aria-label="Следующий">→</a>

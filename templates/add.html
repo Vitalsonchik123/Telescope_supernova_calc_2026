@@ -10,18 +10,21 @@
             <form action="/add" method="GET">
                 <div class="media-fields">
                     <div class="image-upload">
-                        {{ if .telescope.ImageKey }}
-                            <img src="{{ .telescope.ImageURL }}" alt="Изображение" style="max-width: 100%;">
-                        {{ end }}
+                        <div class="file-row">
+                            <span>📷 Изображение:</span>
+                            <span class="file-name">{{ if .telescope.ImageKey }}{{ .telescope.ImageKey }}{{ else }}не выбрано{{ end }}</span>
+                        </div>
                         <input type="file" disabled>
                     </div>
                     <div class="video-upload">
-                        {{ if .telescope.VideoKey }}
-                            <video src="{{ .telescope.VideoURL }}" controls style="max-width: 100%;"></video>
-                        {{ end }}
+                        <div class="file-row">
+                            <span>🎥 Видео:</span>
+                            <span class="file-name">{{ if .telescope.VideoKey }}{{ .telescope.VideoKey }}{{ else }}не выбрано{{ end }}</span>
+                        </div>
                         <input type="file" disabled>
                     </div>
                 </div>
+                <!-- остальные поля без изменений -->
                 <div class="text-fields">
                     <label>Название</label>
                     <input type="text" name="name" value="{{ .telescope.Name }}">
