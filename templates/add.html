@@ -7,57 +7,98 @@
 <body>
     <div class="app-wrapper">
         <div class="add-form">
-            <form action="/add" method="GET">
-                <div class="media-fields">
-                    <div class="image-upload">
-                        <div class="file-row">
-                            <span>📷 Изображение:</span>
-                            <span class="file-name">{{ if .telescope.ImageKey }}{{ .telescope.ImageKey }}{{ else }}не выбрано{{ end }}</span>
+
+            {{ if .hasDraft }}
+                <!-- ============================================ -->
+                <!-- ФОРМА ПУБЛИКАЦИИ (когда черновик уже создан) -->
+                <!-- ============================================ -->
+                <form action="/publish" method="POST">
+                    <input type="hidden" name="id" value="{{ .telescope.ID }}">
+
+                    <div class="media-fields">
+                        <div class="image-upload">
+                            <div class="file-row">
+                                <span>📷 Изображение:</span>
+                                <span class="file-name">{{ .telescope.ImageKey }}</span>
+                            </div>
                         </div>
-                        <input type="file" disabled>
-                    </div>
-                    <div class="video-upload">
-                        <div class="file-row">
-                            <span>🎥 Видео:</span>
-                            <span class="file-name">{{ if .telescope.VideoKey }}{{ .telescope.VideoKey }}{{ else }}не выбрано{{ end }}</span>
+                        <div class="video-upload">
+                            <div class="file-row">
+                                <span>🎥 Видео:</span>
+                                <span class="file-name">{{ .telescope.VideoKey }}</span>
+                            </div>
                         </div>
-                        <input type="file" disabled>
                     </div>
-                </div>
-                <div class="text-fields">
-                    <label>Название</label>
-                    <input type="text" name="name" value="{{ .telescope.Name }}">
 
-                    <label>Обсерватория</label>
-                    <input type="text" name="observatory" value="{{ .telescope.Observatory }}">
+                    <div class="text-fields">
+                        <label>Название</label>
+                        <input type="text" name="name" value="{{ .telescope.Name }}" readonly>
 
-                    <label>Диаметр (см)</label>
-                    <input type="number" name="aperture" value="{{ .telescope.ApertureCm }}">
+                        <label>Обсерватория</label>
+                        <input type="text" name="observatory" value="{{ .telescope.Observatory }}">
 
-                    <label>Поле зрения</label>
-                    <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
+                        <label>Краткое описание</label>
+                        <input type="text" name="description" value="{{ .telescope.Description }}">
 
-                    <label>Фильтры</label>
-                    <input type="text" name="filters" value="{{ .telescope.Filters }}">
+                        <label>Диаметр (см) — поле по теме</label>
+                        <input type="number" name="aperture" value="{{ .telescope.ApertureCm }}">
 
-                    <label>Глубина</label>
-                    <input type="text" name="depth" value="{{ .telescope.DepthMag }}">
+                        <label>Поле зрения — поле по теме</label>
+                        <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
 
-                    <label>Врем. разрешение</label>
-                    <input type="text" name="time_res" value="{{ .telescope.TimeResolution }}">
+                        <label>Фильтры</label>
+                        <input type="text" name="filters" value="{{ .telescope.Filters }}">
 
-                    <label>Дата наблюдения</label>
-                    <input type="date" name="obs_date" value="2025-10-01">
-                </div>
-                <div class="form-actions">
-                    <button type="submit" class="btn btn-confirm">Подтвердить</button>
-                    <button type="submit" name="clear" value="true" class="btn btn-secondary">Очистить</button>
-                </div>
-            </form>
+                        <label>Глубина</label>
+                        <input type="text" name="depth" value="{{ .telescope.DepthMag }}">
+
+                        <label>Врем. разрешение</label>
+                        <input type="text" name="time_res" value="{{ .telescope.TimeResolution }}">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-confirm">Опубликовать</button>
+                    </div>
+                </form>
+
+            {{ else }}
+                <!-- ============================================ -->
+                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА (черновика нет)     -->
+                <!-- ============================================ -->
+                <form action="/create-draft" method="POST">
+                    <div class="media-fields">
+                        <div class="image-upload">
+                            <div class="file-row">
+                                <span>📷 Изображение:</span>
+                                <span class="file-name">не выбрано</span>
+                            </div>
+                            <input type="text" name="image_key" placeholder="например, ztf_image.jpg">
+                        </div>
+                        <div class="video-upload">
+                            <div class="file-row">
+                                <span>🎥 Видео:</span>
+                                <span class="file-name">не выбрано</span>
+                            </div>
+                            <input type="text" name="video_key" placeholder="например, ztf_video.mp4">
+                        </div>
+                    </div>
+
+                    <div class="text-fields">
+                        <label>Название</label>
+                        <input type="text" name="name" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-confirm">Далее</button>
+                    </div>
+                </form>
+            {{ end }}
+
         </div>
     </div>
+
     <div class="tab-bar">
-        <a href="/grid">Лента</a>
+        <a href="/feed">Лента</a>
         <a href="/add" class="active">Добавить</a>
         <a href="/grid">Плитка</a>
     </div>

@@ -20,6 +20,7 @@
             </div>
             <button type="submit" class="filter-btn">Применить</button>
         </form>
+
         <div class="grid-container">
             {{ range .telescopes }}
                 <div class="card">
@@ -29,14 +30,20 @@
                         <p>❤ {{ .Likes }}</p>
                         <p>Диаметр: {{ .Telescope.ApertureCm }} см</p>
                     </a>
+                    <!-- Кнопка удаления -->
+                    <form action="/delete" method="POST" class="delete-form">
+                        <input type="hidden" name="id" value="{{ .Telescope.ID }}">
+                        <button type="submit" class="btn-delete">Удалить</button>
+                    </form>
                 </div>
             {{ else }}
                 <p>Нет телескопов, удовлетворяющих фильтру.</p>
             {{ end }}
         </div>
     </div>
+
     <div class="tab-bar">
-        <a href="/feed?id=1">Лента</a>
+        <a href="/feed">Лента</a>
         <a href="/add">Добавить</a>
         <a href="/grid" class="active">Плитка</a>
     </div>

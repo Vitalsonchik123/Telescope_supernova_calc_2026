@@ -54,14 +54,19 @@ func (h *Handler) buildView(t models.Telescope) models.TelescopeView {
 // GET-обработчики
 // -------------------------------------------------------
 
-// FeedHandler – лента по ID: /feed?id=1&next=true / &prev=true
+// FeedHandler – лента по ID
 func (h *Handler) FeedHandler(c *gin.Context) {
 	idStr := c.Query("id")
 	next := c.Query("next") == "true"
-	prev := c.Query("prev") == "true"
 
+	// Если ID не передан — берём первый опубликованный телескоп
 	if idStr == "" {
-		c.String(http.StatusBadRequest, "Не указан ID телескопа")
+		all, err := h.Repo.GetAll()
+		if err != nil || len(all) == 0 {
+			c.String(http.StatusNotFound, "Нет доступных телескопов")
+			return
+		}
+		c.Redirect(http.StatusFound, "/feed?id="+strconv.FormatUint(uint64(all[0].ID), 10))
 		return
 	}
 
@@ -72,7 +77,7 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 	}
 	id := uint(id64)
 
-	// Проверяем существование
+	// ... остальная логика без изменений
 	tel, err := h.Repo.GetByID(id)
 	if err != nil {
 		logrus.Error(err)
@@ -80,7 +85,6 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 		return
 	}
 
-	// Получаем все опубликованные для навигации
 	all, err := h.Repo.GetAll()
 	if err != nil {
 		logrus.Error(err)
@@ -92,7 +96,6 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 		return
 	}
 
-	// Находим индекс текущего
 	currentIndex := -1
 	for i, t := range all {
 		if t.ID == id {
@@ -110,11 +113,6 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/feed?id="+strconv.FormatUint(uint64(all[ni].ID), 10))
 		return
 	}
-	if prev {
-		pi := (currentIndex - 1 + len(all)) % len(all)
-		c.Redirect(http.StatusFound, "/feed?id="+strconv.FormatUint(uint64(all[pi].ID), 10))
-		return
-	}
 
 	view := h.buildView(*tel)
 	c.HTML(http.StatusOK, "feed.html", gin.H{
@@ -123,7 +121,7 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 	})
 }
 
-// DraftHandler – страница добавления /add и /add?clear=true
+// DraftHandler – страница добавления /add
 func (h *Handler) DraftHandler(c *gin.Context) {
 	// В ЛР2 пока используем фиксированного пользователя id=1
 	const currentUserID uint = 1

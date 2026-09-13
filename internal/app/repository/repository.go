@@ -17,21 +17,21 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-// GetAll – возвращает все услуги, кроме удалённых
+// GetAll – возвращает только опубликованные услуги (draft и deleted не показываются)
 func (r *Repository) GetAll() ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
-		Where("status != ?", "deleted").
+		Where("status = ?", "published").
 		Preload("User").
 		Find(&telescopes).Error
 	return telescopes, err
 }
 
-// GetByID – возвращает услугу по ID, если не удалена
+// GetByID – возвращает услугу по ID, если она опубликована
 func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	var telescope models.Telescope
 	err := r.db.
-		Where("id = ? AND status != ?", id, "deleted").
+		Where("id = ? AND status = ?", id, "published").
 		Preload("User").
 		First(&telescope).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -72,11 +72,11 @@ func (r *Repository) Delete(id uint) error {
 	return r.db.Exec(sql, id).Error
 }
 
-// FilterByApertureMin – фильтрация по минимальному диаметру
+// FilterByApertureMin – фильтрация только по опубликованным услугам
 func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
-		Where("status != ? AND aperture_cm >= ?", "deleted", minAperture).
+		Where("status = ? AND aperture_cm >= ?", "published", minAperture).
 		Preload("User").
 		Find(&telescopes).Error
 	return telescopes, err

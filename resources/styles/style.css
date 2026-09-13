@@ -207,7 +207,7 @@ body {
 
 .nav-arrows {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;   /* стрелка только вперёд */
     margin-top: 12px;
     gap: 12px;
 }
@@ -514,6 +514,29 @@ body {
     gap: 4px;
 }
 
+/* --- Форма удаления внутри карточки --- */
+.delete-form {
+    padding: 0 4px 4px;
+    margin: 0;
+}
+
+.btn-delete {
+    width: 100%;
+    padding: 5px 0;
+    background: #FF9400;
+    color: #ffffff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.btn-delete:hover {
+    opacity: 0.85;
+}
+
 /* Общие стили для лайков (используются в плитке) */
 .likes {
     display: flex;
@@ -543,10 +566,4 @@ body {
         left: 50%;
         transform: translateX(-50%);
     }
-}
-
-.tab-bar {
-    display: flex !important;
-    visibility: visible !important;
-    opacity: 1 !important;
 }
