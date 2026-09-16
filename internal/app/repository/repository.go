@@ -47,7 +47,7 @@ func (r *Repository) GetDraft(userID uint) (*models.Telescope, error) {
 		Where("user_id = ? AND status = ?", userID, "draft").
 		First(&telescope).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil // черновика нет – это не ошибка
+		return nil, nil // черновика нет
 	}
 	return &telescope, err
 }

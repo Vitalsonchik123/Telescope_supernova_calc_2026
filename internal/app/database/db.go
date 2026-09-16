@@ -1,3 +1,5 @@
+//подключение к PostgreSQL и автоматические миграции
+
 package database
 
 import (
@@ -18,7 +20,7 @@ func InitDB() {
 		log.Fatal("Failed to connect to database:", err)
 	}
 
-	// Автоматическая миграция (создание таблиц)
+	// автоматическая миграция (создание таблиц)
 	err = DB.AutoMigrate(&models.User{}, &models.Telescope{}, &models.Like{})
 	if err != nil {
 		log.Fatal("Migration failed:", err)

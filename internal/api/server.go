@@ -1,3 +1,5 @@
+// отвечает за настройку GIN и запуск HTTP сервера
+
 package api
 
 import (
