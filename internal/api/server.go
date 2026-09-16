@@ -27,7 +27,6 @@ func StartServer() {
 	r.GET("/add", h.DraftHandler)
 	r.GET("/grid", h.GridHandler)
 
-	// POST-маршруты для ЛР2
 	r.POST("/create-draft", h.CreateDraftHandler)
 	r.POST("/publish", h.PublishHandler)
 	r.POST("/delete", h.DeleteHandler)
