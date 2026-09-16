@@ -66,7 +66,7 @@ func (r *Repository) Publish(id uint) error {
 		Update("status", "published").Error
 }
 
-// Delete – логическое удаление через SQL UPDATE (без ORM)
+// Delete – логическое удаление через SQL UPDATE
 func (r *Repository) Delete(id uint) error {
 	sql := "UPDATE telescopes SET status = 'deleted' WHERE id = $1"
 	return r.db.Exec(sql, id).Error
