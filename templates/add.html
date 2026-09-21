@@ -9,9 +9,7 @@
         <div class="add-form">
 
             {{ if .hasDraft }}
-                <!-- ============================================ -->
-                <!-- ФОРМА ПУБЛИКАЦИИ (когда черновик уже создан) -->
-                <!-- ============================================ -->
+                <!-- ФОРМА ПУБЛИКАЦИИ -->
                 <form action="/publish" method="POST">
                     <input type="hidden" name="id" value="{{ .telescope.ID }}">
 
@@ -21,12 +19,14 @@
                                 <span>📷 Изображение:</span>
                                 <span class="file-name">{{ .telescope.ImageKey }}</span>
                             </div>
+                            <img src="{{ .telescope.ImageURL }}" alt="Предпросмотр" class="preview-img">
                         </div>
                         <div class="video-upload">
                             <div class="file-row">
                                 <span>🎥 Видео:</span>
                                 <span class="file-name">{{ .telescope.VideoKey }}</span>
                             </div>
+                            <video src="{{ .telescope.VideoURL }}" class="preview-video" muted></video>
                         </div>
                     </div>
 
@@ -44,7 +44,7 @@
                         <input type="number" name="aperture" value="{{ .telescope.ApertureCm }}">
 
                         <label>Поле зрения — поле по теме</label>
-                        <input type="text" name="fov" value="{{ .telescope.FovDeg }}">
+                        <input type="number" step="any" name="fov" value="{{ .telescope.FovDeg }}">
 
                         <label>Фильтры</label>
                         <input type="text" name="filters" value="{{ .telescope.Filters }}">
@@ -62,24 +62,22 @@
                 </form>
 
             {{ else }}
-                <!-- ============================================ -->
-                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА (черновика нет)     -->
-                <!-- ============================================ -->
+                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА -->
                 <form action="/create-draft" method="POST">
                     <div class="media-fields">
                         <div class="image-upload">
                             <div class="file-row">
                                 <span>📷 Изображение:</span>
-                                <span class="file-name">не выбрано</span>
+                                <span class="file-name">{{ if .telescope.ImageKey }}{{ .telescope.ImageKey }}{{ else }}не выбрано{{ end }}</span>
                             </div>
-                            <input type="text" name="image_key" placeholder="например, ztf_image.jpg">
+                            <img src="{{ .telescope.ImageURL }}" alt="Предпросмотр" class="preview-img">
                         </div>
                         <div class="video-upload">
                             <div class="file-row">
                                 <span>🎥 Видео:</span>
-                                <span class="file-name">не выбрано</span>
+                                <span class="file-name">{{ if .telescope.VideoKey }}{{ .telescope.VideoKey }}{{ else }}не выбрано{{ end }}</span>
                             </div>
-                            <input type="text" name="video_key" placeholder="например, ztf_video.mp4">
+                            <video src="{{ .telescope.VideoURL }}" class="preview-video" muted></video>
                         </div>
                     </div>
 

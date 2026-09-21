@@ -10,12 +10,21 @@
         <div class="video-container">
             <video src="{{ .telescope.VideoURL }}" autoplay muted loop></video>
             <div class="overlay">
+
+                <!-- Заголовок + правая колонка (диаметр / поле зрения / лайк) -->
                 <div class="title-row">
                     <h1>{{ .telescope.Name }}</h1>
-                    <div class="likes">
-                        <span class="heart">❤</span> {{ .telescope.Likes }}
+                    <div class="title-right">
+                        <div class="sn-data">
+                            <span>Диаметр: {{ .telescope.ApertureCm }} см</span>
+                            <span>Поле зрения: {{ .telescope.FovDeg }}°</span>
+                        </div>
+                        <div class="likes">
+                            <span class="heart">❤</span> {{ .telescope.Likes }}
+                        </div>
                     </div>
                 </div>
+
                 <p>{{ .telescope.Observatory }}</p>
 
                 <details class="description-details">
@@ -23,19 +32,12 @@
                         <span class="more">ещё...</span>
                         <span class="less">меньше</span>
                     </summary>
-                    <p>Диаметр: {{ .telescope.ApertureCm }} см | Поле зрения: {{ .telescope.FovDeg }}°</p>
                     <p>Фильтры: {{ range .telescope.FiltersSlice }}{{ . }} {{ end }}</p>
                     <p>Глубина: {{ .telescope.DepthMag }}</p>
                     <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
                     <p class="description">{{ .telescope.Description }}</p>
                 </details>
 
-                <div class="sn-data">
-                    <span>Ni-56: 0.55 M☉</span>
-                    <span>Энергия: 1.2e51 эрг</span>
-                </div>
-
-                <!-- Только кнопка "вперёд" -->
                 <div class="nav-arrows">
                     <a href="/feed?id={{ .telescope.ID }}&next=true" class="arrow-btn" aria-label="Следующий">→</a>
                 </div>

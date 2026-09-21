@@ -21,12 +21,17 @@ func NewHandler(r *repository.Repository) *Handler {
 	return &Handler{Repo: r}
 }
 
-// getMinioURL формирует полный URL к файлу в MinIO
+// getMinioURL формирует полный URL к файлу в MinIO (для опубликованных)
 func getMinioURL(key string) string {
 	return "http://localhost:9000/supernova-data/" + key
 }
 
-// splitFilters превращает строку "g,r,i" в срез строк
+// getLocalURL формирует локальный URL к файлу-заглушке черновика
+func getLocalURL(filename string) string {
+	return "/static/default/" + filename
+}
+
+// splitFilters превращает "g,r,i" в []string{"g","r","i"}
 func splitFilters(f string) []string {
 	if f == "" {
 		return []string{}
@@ -38,7 +43,7 @@ func splitFilters(f string) []string {
 	return parts
 }
 
-// buildView собирает TelescopeView из модели Telescope + данные лайков и MinIO
+// buildView собирает TelescopeView (MinIO — для ленты/плитки)
 func (h *Handler) buildView(t models.Telescope) models.TelescopeView {
 	likes, _ := h.Repo.GetLikesCount(t.ID)
 	return models.TelescopeView{
@@ -54,12 +59,12 @@ func (h *Handler) buildView(t models.Telescope) models.TelescopeView {
 // GET-обработчики
 // -------------------------------------------------------
 
-// FeedHandler – лента по ID
+// FeedHandler – лента по ID: /feed?id=1&next=true
 func (h *Handler) FeedHandler(c *gin.Context) {
 	idStr := c.Query("id")
 	next := c.Query("next") == "true"
 
-	// Если ID не передан — берём первый опубликованный телескоп
+	// Если ID не передан — берём первый опубликованный
 	if idStr == "" {
 		all, err := h.Repo.GetAll()
 		if err != nil || len(all) == 0 {
@@ -77,7 +82,6 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 	}
 	id := uint(id64)
 
-	// ... остальная логика без изменений
 	tel, err := h.Repo.GetByID(id)
 	if err != nil {
 		logrus.Error(err)
@@ -121,17 +125,14 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 	})
 }
 
-// DraftHandler – страница добавления /add
+// DraftHandler – страница добавления /add и /add?clear=true
 func (h *Handler) DraftHandler(c *gin.Context) {
-	// В ЛР2 пока используем фиксированного пользователя id=1
 	const currentUserID uint = 1
-
 	clear := c.Query("clear") == "true"
 
 	var view models.TelescopeView
 
 	if clear {
-		// Пустая модель для очистки полей
 		view = models.TelescopeView{
 			Telescope:    models.Telescope{},
 			FiltersSlice: []string{},
@@ -144,7 +145,6 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 			return
 		}
 		if draft == nil {
-			// Черновика нет — отдаём пустую форму (для кнопки «Далее»)
 			view = models.TelescopeView{
 				Telescope:    models.Telescope{UserID: currentUserID},
 				FiltersSlice: []string{},
@@ -153,6 +153,10 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 			view = h.buildView(*draft)
 		}
 	}
+
+	// Для черновика — локальные URL заглушек
+	view.ImageURL = getLocalURL("tess_image.jpg")
+	view.VideoURL = getLocalURL("tess_video.mp4")
 
 	c.HTML(http.StatusOK, "add.html", gin.H{
 		"telescope": view,
@@ -164,15 +168,18 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 func (h *Handler) GridHandler(c *gin.Context) {
 	minStr := c.Query("min_aperture")
 	minAperture := 0
+	applied := false
+
 	if minStr != "" {
 		if v, err := strconv.Atoi(minStr); err == nil {
 			minAperture = v
+			applied = true
 		}
 	}
 
 	var telescopes []models.Telescope
 	var err error
-	if minAperture > 0 {
+	if applied && minAperture > 0 {
 		telescopes, err = h.Repo.FilterByApertureMin(minAperture)
 	} else {
 		telescopes, err = h.Repo.GetAll()
@@ -191,18 +198,29 @@ func (h *Handler) GridHandler(c *gin.Context) {
 	c.HTML(http.StatusOK, "grid.html", gin.H{
 		"telescopes":  views,
 		"minAperture": minAperture,
+		"applied":     applied,
 		"time":        time.Now().Format("15:04:05"),
 	})
 }
 
 // -------------------------------------------------------
-// POST-обработчики (ЛР2)
+// POST-обработчики
 // -------------------------------------------------------
 
-// CreateDraftHandler – создание черновика (POST /create-draft)
-// Принимает: name, image_key, video_key
+// CreateDraftHandler – POST /create-draft
 func (h *Handler) CreateDraftHandler(c *gin.Context) {
 	const currentUserID uint = 1
+
+	existing, err := h.Repo.GetDraft(currentUserID)
+	if err != nil {
+		logrus.Error(err)
+		c.String(http.StatusInternalServerError, "Ошибка БД")
+		return
+	}
+	if existing != nil {
+		c.Redirect(http.StatusFound, "/add")
+		return
+	}
 
 	name := c.PostForm("name")
 	imageKey := c.PostForm("image_key")
@@ -230,8 +248,7 @@ func (h *Handler) CreateDraftHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/add")
 }
 
-// PublishHandler – публикация услуги (POST /publish)
-// Принимает: id, description, aperture_cm, fov_deg и другие поля
+// PublishHandler – POST /publish
 func (h *Handler) PublishHandler(c *gin.Context) {
 	idStr := c.PostForm("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -241,25 +258,22 @@ func (h *Handler) PublishHandler(c *gin.Context) {
 	}
 	id := uint(id64)
 
-	// Собираем обновления
 	updates := map[string]interface{}{
 		"description":     c.PostForm("description"),
 		"aperture_cm":     atoiSafe(c.PostForm("aperture")),
-		"fov_deg":         c.PostForm("fov"),
+		"fov_deg":         parseFloatSafe(c.PostForm("fov")),
 		"filters":         c.PostForm("filters"),
 		"depth_mag":       c.PostForm("depth"),
 		"time_resolution": c.PostForm("time_res"),
 		"observatory":     c.PostForm("observatory"),
 	}
 
-	// Обновляем поля через ORM (метод репозитория)
 	if err := h.Repo.UpdateFields(id, updates); err != nil {
 		logrus.Error(err)
 		c.String(http.StatusInternalServerError, "Ошибка обновления")
 		return
 	}
 
-	// Меняем статус на published
 	if err := h.Repo.Publish(id); err != nil {
 		logrus.Error(err)
 		c.String(http.StatusInternalServerError, "Ошибка публикации")
@@ -269,7 +283,7 @@ func (h *Handler) PublishHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/grid")
 }
 
-// DeleteHandler – логическое удаление (POST /delete) через SQL UPDATE
+// DeleteHandler – POST /delete (логическое удаление через SQL UPDATE)
 func (h *Handler) DeleteHandler(c *gin.Context) {
 	idStr := c.PostForm("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -293,5 +307,10 @@ func (h *Handler) DeleteHandler(c *gin.Context) {
 
 func atoiSafe(s string) int {
 	v, _ := strconv.Atoi(s)
+	return v
+}
+
+func parseFloatSafe(s string) float64 {
+	v, _ := strconv.ParseFloat(s, 64)
 	return v
 }

@@ -28,7 +28,7 @@ body {
     min-height: 100vh;
     padding: 0;
     margin: 0;
-    overflow-y: scroll; /* фиксируем скроллбар */
+    overflow-y: scroll;
 }
 
 /* --------------------------------------------
@@ -46,7 +46,6 @@ body {
     padding-bottom: 143px;
 }
 
-/* Для ленты – полная высота, отступ не нужен */
 .app-wrapper.feed-wrapper {
     height: 100vh;
     min-height: unset;
@@ -114,7 +113,6 @@ body {
     filter: none;
 }
 
-/* Иконки */
 .tab-bar a:nth-child(1)::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23174B9B'%3E%3Cpath d='M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z'/%3E%3C/svg%3E");
 }
@@ -157,11 +155,11 @@ body {
     color: #ffffff;
 }
 
-/* Строка с названием и лайками */
+/* Строка с названием и правой колонкой */
 .title-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     margin-bottom: 4px;
 }
 
@@ -172,16 +170,37 @@ body {
     margin: 0;
 }
 
-.title-row .likes {
+.title-right {
     display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 20px;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.title-right .sn-data {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 12px;
+    font-weight: 600;
     color: #FF9400;
     margin: 0;
 }
 
-.title-row .heart {
+.title-right .sn-data span {
+    white-space: nowrap;
+}
+
+.title-right .likes {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 18px;
+    color: #FF9400;
+    margin: 0;
+}
+
+.title-right .heart {
     color: #FF9400;
 }
 
@@ -197,17 +216,9 @@ body {
     margin: 6px 0;
 }
 
-.sn-data {
-    display: flex;
-    gap: 16px;
-    margin: 8px 0;
-    font-size: 14px;
-    font-weight: 600;
-}
-
 .nav-arrows {
     display: flex;
-    justify-content: flex-end;   /* стрелка только вперёд */
+    justify-content: flex-end;
     margin-top: 12px;
     gap: 12px;
 }
@@ -269,7 +280,7 @@ body {
 }
 
 /* --------------------------------------------
-   Страница ДОБАВЛЕНИЯ (add) – компактные файлы
+   Страница ДОБАВЛЕНИЯ (add)
    -------------------------------------------- */
 .add-form {
     padding: 16px;
@@ -312,6 +323,22 @@ body {
     margin-top: 4px;
     width: 100%;
     font-size: 13px;
+}
+
+.preview-img {
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-top: 6px;
+}
+
+.preview-video {
+    width: 100%;
+    max-height: 120px;
+    border-radius: 6px;
+    margin-top: 6px;
+    background: #000;
 }
 
 .text-fields {
@@ -385,21 +412,29 @@ body {
    -------------------------------------------- */
 .filter-form {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding: 8px 16px 4px;
-    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 16px 8px;
+}
+
+/* Строка: ползунок + число */
+.filter-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
 }
 
 .slider-container {
     display: flex;
-    align-items: center;
-    gap: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
     background: #f9f9fc;
-    padding: 4px 12px;
+    padding: 8px 12px 6px;
     border-radius: 8px;
     border: 1px solid #d1d1d6;
+    width: 240px;
 }
 
 .slider-container label {
@@ -410,43 +445,83 @@ body {
 }
 
 .slider-container input[type="range"] {
-    width: 140px;
+    width: 100%;
     height: 4px;
     -webkit-appearance: none;
     appearance: none;
     background: #174B9B;
     border-radius: 2px;
     outline: none;
+    margin: 8px 0 4px;
 }
 
 .slider-container input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background: #174B9B;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
 .slider-container input[type="range"]::-moz-range-thumb {
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     background: #174B9B;
     border-radius: 50%;
     cursor: pointer;
-    border: 2px solid white;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    border: 2px solid #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 
-.slider-value {
+/* Шкала-линейка со штрихами */
+.slider-scale {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 11px;
+    color: var(--text-secondary);
+    padding: 0 9px;
+    box-sizing: border-box;
+}
+
+.slider-scale span {
+    position: relative;
+    text-align: center;
+    flex: 0 0 auto;
+    width: 0;
+    white-space: nowrap;
+}
+
+.slider-scale span::before {
+    content: "";
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 1px;
+    height: 6px;
+    background: #174B9B;
+}
+
+/* Число в отдельном блоке справа от ползунка */
+.slider-value-box {
+    min-width: 56px;
+    height: 40px;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9f9fc;
+    border: 1px solid #d1d1d6;
+    border-radius: 8px;
     font-size: 16px;
     font-weight: 600;
     color: #174B9B;
-    min-width: 40px;
-    text-align: center;
+    align-self: flex-start;
 }
 
 .filter-btn {
@@ -514,7 +589,6 @@ body {
     gap: 4px;
 }
 
-/* --- Форма удаления внутри карточки --- */
 .delete-form {
     padding: 0 4px 4px;
     margin: 0;
@@ -537,7 +611,6 @@ body {
     opacity: 0.85;
 }
 
-/* Общие стили для лайков (используются в плитке) */
 .likes {
     display: flex;
     align-items: center;

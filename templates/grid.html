@@ -7,17 +7,33 @@
 <body>
     <div class="app-wrapper">
         <form action="/grid" method="GET" class="filter-form">
-            <div class="slider-container">
-                <label for="aperture-slider">Диаметр от (см):</label>
-                <input type="range"
-                       id="aperture-slider"
-                       name="min_aperture"
-                       min="0"
-                       max="1200"
-                       step="1"
-                       value="{{ .minAperture }}">
-                <span class="slider-value">{{ .minAperture }}</span>
+            <div class="filter-row">
+                <div class="slider-container">
+                    <label for="aperture-slider">Диаметр от (см):</label>
+                    <input type="range"
+                           id="aperture-slider"
+                           name="min_aperture"
+                           min="0"
+                           max="1000"
+                           step="1"
+                           value="{{ .minAperture }}">
+
+                    <div class="slider-scale">
+                        <span>0</span>
+                        <span>200</span>
+                        <span>400</span>
+                        <span>600</span>
+                        <span>800</span>
+                        <span>1000</span>
+                    </div>
+                </div>
+
+                <!-- Число в отдельном блоке справа -->
+                <div class="slider-value-box">
+                    {{ .minAperture }}
+                </div>
             </div>
+
             <button type="submit" class="filter-btn">Применить</button>
         </form>
 
@@ -30,7 +46,6 @@
                         <p>❤ {{ .Likes }}</p>
                         <p>Диаметр: {{ .Telescope.ApertureCm }} см</p>
                     </a>
-                    <!-- Кнопка удаления -->
                     <form action="/delete" method="POST" class="delete-form">
                         <input type="hidden" name="id" value="{{ .Telescope.ID }}">
                         <button type="submit" class="btn-delete">Удалить</button>

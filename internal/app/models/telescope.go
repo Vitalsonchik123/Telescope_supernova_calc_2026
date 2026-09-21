@@ -1,5 +1,3 @@
-//описание структуры таблиц БД через GORM-модели.
-
 package models
 
 import (
@@ -19,16 +17,16 @@ type Telescope struct {
 	ID             uint      `gorm:"primaryKey" json:"id"`
 	Name           string    `gorm:"not null" json:"name"`
 	Observatory    string    `json:"observatory"`
-	ApertureCm     int       `json:"aperture_cm"`              // для фильтрации
-	FovDeg         string    `json:"fov_deg"`                  // "47" или "24x96"
-	Filters        string    `gorm:"type:text" json:"filters"` // храним как строку, например "g,r,i"
-	DepthMag       string    `json:"depth_mag"`                // "g ~ 20,8; r ~ 20,6"
-	TimeResolution string    `json:"time_resolution"`          // "всё северное небо каждую ночь"
+	ApertureCm     int       `json:"aperture_cm"` // диаметр, см
+	FovDeg         float64   `json:"fov_deg"`     // поле зрения, числовое
+	Filters        string    `gorm:"type:text" json:"filters"`
+	DepthMag       string    `json:"depth_mag"`
+	TimeResolution string    `json:"time_resolution"`
 	Description    string    `json:"description"`
-	Status         string    `gorm:"default:'draft'" json:"status"` // draft, published, deleted
+	Status         string    `gorm:"default:'draft'" json:"status"`
 	ImageKey       string    `json:"image_key"`
 	VideoKey       string    `json:"video_key"`
-	UserID         uint      `gorm:"not null" json:"user_id"` // создатель
+	UserID         uint      `gorm:"not null" json:"user_id"`
 	User           User      `gorm:"foreignKey:UserID" json:"user"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`
@@ -47,8 +45,8 @@ type Like struct {
 // TelescopeView – для передачи в шаблон с дополнительными полями
 type TelescopeView struct {
 	Telescope
-	ImageURL     string   // полный URL к изображению
-	VideoURL     string   // полный URL к видео
-	Likes        int      // количество лайков
-	FiltersSlice []string // для удобства отображения в шаблоне
+	ImageURL     string
+	VideoURL     string
+	Likes        int
+	FiltersSlice []string
 }
