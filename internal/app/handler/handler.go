@@ -3,7 +3,6 @@ package handler
 import (
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -21,50 +20,32 @@ func NewHandler(r *repository.Repository) *Handler {
 	return &Handler{Repo: r}
 }
 
-// getMinioURL формирует полный URL к файлу в MinIO (для опубликованных)
+// getMinioURL – полный URL к файлу в MinIO
 func getMinioURL(key string) string {
 	return "http://localhost:9000/supernova-data/" + key
 }
 
-// getLocalURL формирует локальный URL к файлу-заглушке черновика
+// getLocalURL – локальный URL заглушки черновика
 func getLocalURL(filename string) string {
 	return "/static/default/" + filename
 }
 
-// splitFilters превращает "g,r,i" в []string{"g","r","i"}
-func splitFilters(f string) []string {
-	if f == "" {
-		return []string{}
-	}
-	parts := strings.Split(f, ",")
-	for i := range parts {
-		parts[i] = strings.TrimSpace(parts[i])
-	}
-	return parts
-}
-
-// buildView собирает TelescopeView (MinIO — для ленты/плитки)
+// buildView собирает TelescopeView
 func (h *Handler) buildView(t models.Telescope) models.TelescopeView {
 	likes, _ := h.Repo.GetLikesCount(t.ID)
 	return models.TelescopeView{
-		Telescope:    t,
-		ImageURL:     getMinioURL(t.ImageKey),
-		VideoURL:     getMinioURL(t.VideoKey),
-		Likes:        int(likes),
-		FiltersSlice: splitFilters(t.Filters),
+		Telescope: t,
+		ImageURL:  getMinioURL(t.ImageKey),
+		VideoURL:  getMinioURL(t.VideoKey),
+		Likes:     int(likes),
 	}
 }
 
-// -------------------------------------------------------
-// GET-обработчики
-// -------------------------------------------------------
-
-// FeedHandler – лента по ID: /feed?id=1&next=true
+// FeedHandler – лента по ID
 func (h *Handler) FeedHandler(c *gin.Context) {
 	idStr := c.Query("id")
 	next := c.Query("next") == "true"
 
-	// Если ID не передан — берём первый опубликованный
 	if idStr == "" {
 		all, err := h.Repo.GetAll()
 		if err != nil || len(all) == 0 {
@@ -125,7 +106,7 @@ func (h *Handler) FeedHandler(c *gin.Context) {
 	})
 }
 
-// DraftHandler – страница добавления /add и /add?clear=true
+// DraftHandler – страница добавления
 func (h *Handler) DraftHandler(c *gin.Context) {
 	const currentUserID uint = 1
 	clear := c.Query("clear") == "true"
@@ -133,10 +114,7 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 	var view models.TelescopeView
 
 	if clear {
-		view = models.TelescopeView{
-			Telescope:    models.Telescope{},
-			FiltersSlice: []string{},
-		}
+		view = models.TelescopeView{Telescope: models.Telescope{}}
 	} else {
 		draft, err := h.Repo.GetDraft(currentUserID)
 		if err != nil {
@@ -145,16 +123,13 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 			return
 		}
 		if draft == nil {
-			view = models.TelescopeView{
-				Telescope:    models.Telescope{UserID: currentUserID},
-				FiltersSlice: []string{},
-			}
+			view = models.TelescopeView{Telescope: models.Telescope{UserID: currentUserID}}
 		} else {
 			view = h.buildView(*draft)
 		}
 	}
 
-	// Для черновика — локальные URL заглушек
+	// Для черновика — локальные заглушки
 	view.ImageURL = getLocalURL("tess_image.jpg")
 	view.VideoURL = getLocalURL("tess_video.mp4")
 
@@ -164,7 +139,7 @@ func (h *Handler) DraftHandler(c *gin.Context) {
 	})
 }
 
-// GridHandler – плитка /grid?min_aperture=...
+// GridHandler – плитка
 func (h *Handler) GridHandler(c *gin.Context) {
 	minStr := c.Query("min_aperture")
 	minAperture := 0
@@ -203,11 +178,7 @@ func (h *Handler) GridHandler(c *gin.Context) {
 	})
 }
 
-// -------------------------------------------------------
-// POST-обработчики
-// -------------------------------------------------------
-
-// CreateDraftHandler – POST /create-draft
+// CreateDraftHandler – создание черновика
 func (h *Handler) CreateDraftHandler(c *gin.Context) {
 	const currentUserID uint = 1
 
@@ -248,7 +219,7 @@ func (h *Handler) CreateDraftHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/add")
 }
 
-// PublishHandler – POST /publish
+// PublishHandler – публикация
 func (h *Handler) PublishHandler(c *gin.Context) {
 	idStr := c.PostForm("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -259,13 +230,10 @@ func (h *Handler) PublishHandler(c *gin.Context) {
 	id := uint(id64)
 
 	updates := map[string]interface{}{
-		"description":     c.PostForm("description"),
-		"aperture_cm":     atoiSafe(c.PostForm("aperture")),
-		"fov_deg":         parseFloatSafe(c.PostForm("fov")),
-		"filters":         c.PostForm("filters"),
-		"depth_mag":       c.PostForm("depth"),
-		"time_resolution": c.PostForm("time_res"),
-		"observatory":     c.PostForm("observatory"),
+		"observatory": c.PostForm("observatory"),
+		"description": c.PostForm("description"),
+		"aperture_cm": atoiSafe(c.PostForm("aperture")),
+		"fov_deg":     parseFloatSafe(c.PostForm("fov")),
 	}
 
 	if err := h.Repo.UpdateFields(id, updates); err != nil {
@@ -283,7 +251,7 @@ func (h *Handler) PublishHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/grid")
 }
 
-// DeleteHandler – POST /delete (логическое удаление через SQL UPDATE)
+// DeleteHandler – удаление
 func (h *Handler) DeleteHandler(c *gin.Context) {
 	idStr := c.PostForm("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -301,10 +269,7 @@ func (h *Handler) DeleteHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/grid")
 }
 
-// -------------------------------------------------------
 // Вспомогательные функции
-// -------------------------------------------------------
-
 func atoiSafe(s string) int {
 	v, _ := strconv.Atoi(s)
 	return v

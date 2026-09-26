@@ -32,9 +32,6 @@
                         <span class="more">ещё...</span>
                         <span class="less">меньше</span>
                     </summary>
-                    <p>Фильтры: {{ range .telescope.FiltersSlice }}{{ . }} {{ end }}</p>
-                    <p>Глубина: {{ .telescope.DepthMag }}</p>
-                    <p>Врем. разрешение: {{ .telescope.TimeResolution }}</p>
                     <p class="description">{{ .telescope.Description }}</p>
                 </details>
 

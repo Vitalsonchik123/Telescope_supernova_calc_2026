@@ -12,12 +12,11 @@ type Repository struct {
 	db *gorm.DB
 }
 
-// NewRepository принимает подключение к БД
 func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-// GetAll – возвращает только опубликованные услуги (draft и deleted не показываются)
+// GetAll – возвращает только опубликованные услуги
 func (r *Repository) GetAll() ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
@@ -40,25 +39,25 @@ func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	return &telescope, err
 }
 
-// GetDraft – возвращает черновик пользователя (не более одного)
+// GetDraft – черновик пользователя
 func (r *Repository) GetDraft(userID uint) (*models.Telescope, error) {
 	var telescope models.Telescope
 	err := r.db.
 		Where("user_id = ? AND status = ?", userID, "draft").
 		First(&telescope).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil // черновика нет
+		return nil, nil
 	}
 	return &telescope, err
 }
 
-// CreateDraft – создаёт новую услугу со статусом draft через ORM
+// CreateDraft – создаёт новую услугу со статусом draft
 func (r *Repository) CreateDraft(t *models.Telescope) error {
 	t.Status = "draft"
 	return r.db.Create(t).Error
 }
 
-// Publish – меняет статус на published через ORM
+// Publish – меняет статус на published
 func (r *Repository) Publish(id uint) error {
 	return r.db.
 		Model(&models.Telescope{}).
@@ -66,13 +65,13 @@ func (r *Repository) Publish(id uint) error {
 		Update("status", "published").Error
 }
 
-// Delete – логическое удаление через SQL UPDATE
+// Delete – логическое удаление через SQL UPDATE (без ORM)
 func (r *Repository) Delete(id uint) error {
 	sql := "UPDATE telescopes SET status = 'deleted' WHERE id = $1"
 	return r.db.Exec(sql, id).Error
 }
 
-// FilterByApertureMin – фильтрация только по опубликованным услугам
+// FilterByApertureMin – фильтрация только по опубликованным
 func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
@@ -82,7 +81,7 @@ func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, e
 	return telescopes, err
 }
 
-// GetLikesCount – количество лайков для услуги
+// GetLikesCount – количество лайков
 func (r *Repository) GetLikesCount(telescopeID uint) (int64, error) {
 	var count int64
 	err := r.db.
@@ -92,7 +91,7 @@ func (r *Repository) GetLikesCount(telescopeID uint) (int64, error) {
 	return count, err
 }
 
-// UpdateFields – обновляет произвольные поля услуги через ORM
+// UpdateFields – обновляет поля через ORM
 func (r *Repository) UpdateFields(id uint, updates map[string]interface{}) error {
 	return r.db.
 		Model(&models.Telescope{}).

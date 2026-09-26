@@ -9,7 +9,9 @@
         <div class="add-form">
 
             {{ if .hasDraft }}
-                <!-- ФОРМА ПУБЛИКАЦИИ -->
+                <!-- ============================================ -->
+                <!-- ФОРМА ПУБЛИКАЦИИ (когда черновик уже создан) -->
+                <!-- ============================================ -->
                 <form action="/publish" method="POST">
                     <input type="hidden" name="id" value="{{ .telescope.ID }}">
 
@@ -45,15 +47,6 @@
 
                         <label>Поле зрения — поле по теме</label>
                         <input type="number" step="any" name="fov" value="{{ .telescope.FovDeg }}">
-
-                        <label>Фильтры</label>
-                        <input type="text" name="filters" value="{{ .telescope.Filters }}">
-
-                        <label>Глубина</label>
-                        <input type="text" name="depth" value="{{ .telescope.DepthMag }}">
-
-                        <label>Врем. разрешение</label>
-                        <input type="text" name="time_res" value="{{ .telescope.TimeResolution }}">
                     </div>
 
                     <div class="form-actions">
@@ -62,7 +55,9 @@
                 </form>
 
             {{ else }}
-                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА -->
+                <!-- ============================================ -->
+                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА (черновика нет)     -->
+                <!-- ============================================ -->
                 <form action="/create-draft" method="POST">
                     <div class="media-fields">
                         <div class="image-upload">

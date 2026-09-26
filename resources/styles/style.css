@@ -524,12 +524,13 @@ body {
     align-self: flex-start;
 }
 
+/* Кнопка «Применить» — единый стиль с «Опубликовать» */
 .filter-btn {
-    padding: 6px 18px;
+    padding: 8px 28px;
     background-color: #174B9B;
     color: #ffffff;
     border: none;
-    border-radius: 8px;
+    border-radius: 20px;
     font-weight: 600;
     font-size: 16px;
     cursor: pointer;
@@ -594,21 +595,22 @@ body {
     margin: 0;
 }
 
+/* Кнопка «Удалить» — единый стиль с «Опубликовать» */
 .btn-delete {
     width: 100%;
-    padding: 5px 0;
-    background: #FF9400;
+    padding: 6px 0;
+    background: #174B9B;
     color: #ffffff;
     border: none;
-    border-radius: 6px;
+    border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
     cursor: pointer;
-    transition: opacity 0.2s;
+    transition: background 0.2s;
 }
 
 .btn-delete:hover {
-    opacity: 0.85;
+    background: #0f3a7a;
 }
 
 .likes {
