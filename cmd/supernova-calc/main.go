@@ -1,7 +1,18 @@
 package main
 
-import "supernova-calc/internal/api"
+import (
+	"log"
+
+	"github.com/joho/godotenv"
+
+	"supernova-calc/internal/api"
+)
 
 func main() {
-    api.StartServer()
+	// Загружаем .env
+	if err := godotenv.Load(); err != nil {
+		log.Println("Warning: .env not found")
+	}
+
+	api.StartServer()
 }
