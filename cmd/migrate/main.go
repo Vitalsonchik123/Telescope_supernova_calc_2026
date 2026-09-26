@@ -22,7 +22,6 @@ func main() {
 		log.Fatal("Migration failed:", err)
 	}
 
-	// Создаём пользователя-заглушку, если его нет
 	var count int64
 	database.DB.Model(&models.User{}).Where("id = ?", 1).Count(&count)
 	if count == 0 {
