@@ -42,6 +42,18 @@ func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	return &telescope, err
 }
 
+// GetByIDAny – возвращает услугу по ID независимо от статуса (кроме deleted) Для Postman в ЛР3
+func (r *Repository) GetByIDAny(id uint) (*models.Telescope, error) {
+	var t models.Telescope
+	err := r.db.
+		Where("id = ? AND status != ?", id, "deleted").
+		First(&t).Error
+	if err != nil {
+		return nil, err
+	}
+	return &t, nil
+}
+
 // GetDraft – черновик пользователя
 func (r *Repository) GetDraft(userID uint) (*models.Telescope, error) {
 	var telescope models.Telescope
@@ -127,7 +139,7 @@ func (r *Repository) GetPublishedTelescopes(minAperture int) ([]models.Telescope
 	return telescopes, err
 }
 
-// AddTelescopeImage — сохраняет путь к файлу в MinIO (в поле image_key или video_key)
+// AddTelescopeImage — сохраняет путь к файлу в MinIO
 func (r *Repository) AddTelescopeImage(id uint, field string, filename string) error {
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Update(field, filename).Error
 }
@@ -146,16 +158,14 @@ func (r *Repository) SoftDeleteTelescope(id uint) error {
 // SetLike — поставить/снять лайк
 func (r *Repository) SetLike(userID, telescopeID uint, like int) error {
 	if like == 1 {
-		// Создаём, если не существует
 		var existing models.Like
 		err := r.db.Where("user_id = ? AND telescope_id = ?", userID, telescopeID).First(&existing).Error
 		if err == nil {
-			return nil // уже есть
+			return nil
 		}
 		newLike := models.Like{UserID: userID, TelescopeID: telescopeID}
 		return r.db.Create(&newLike).Error
 	}
-	// like == 0 — удаляем
 	return r.db.Where("user_id = ? AND telescope_id = ?", userID, telescopeID).Delete(&models.Like{}).Error
 }
 
@@ -168,7 +178,7 @@ func (r *Repository) RegisterUser(name string) (*models.User, error) {
 	return &user, nil
 }
 
-// GetUserByName — для логина (заглушка)
+// GetUserByName — для логина
 func (r *Repository) GetUserByName(name string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("name = ?", name).First(&user).Error

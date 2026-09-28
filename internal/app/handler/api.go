@@ -63,7 +63,6 @@ func (h *Handler) APIFeed(c *gin.Context) {
 			h.apiError(c, http.StatusNotFound, "Нет услуг")
 			return
 		}
-		// Если next=true — берём второй, иначе первый
 		idx := 0
 		if next {
 			idx = 1 % len(all)
@@ -163,7 +162,6 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 		return
 	}
 
-	// Создаём черновик
 	t := &models.Telescope{
 		Name:   name,
 		UserID: userID,
@@ -189,8 +187,8 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 		}
 	}
 
-	// Перечитываем из БД
-	updated, _ := h.Repo.GetByID(t.ID)
+	// Перечитываем из БД (используем GetByIDAny — ищет и draft, и published)
+	updated, _ := h.Repo.GetByIDAny(t.ID)
 	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": updated})
 }
 
@@ -244,7 +242,7 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 }
 
 // ---------------------------------------------------------
-// POST /api/telescopes/:id/like — поставить/снять лайк
+// POST /api/telescopes/:id/like
 // ---------------------------------------------------------
 func (h *Handler) APILikeTelescope(c *gin.Context) {
 	idStr := c.Param("id")
@@ -270,7 +268,6 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 		return
 	}
 
-	// Возвращаем новое количество лайков
 	count, _ := h.Repo.GetLikesCount(uint(id64))
 	c.JSON(http.StatusOK, gin.H{"status": "success", "likes_count": count})
 }
@@ -315,17 +312,17 @@ func (h *Handler) APILogin(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Заглушка авторизации. В ЛР4 здесь будет JWT",
+		"message": "Заглушка авторизации",
 		"data":    models.UserSerializer{ID: user.ID, Name: user.Name},
 	})
 }
 
 // ---------------------------------------------------------
-// POST /api/users/logout — заглушка
+// POST /api/users/logout
 // ---------------------------------------------------------
 func (h *Handler) APILogout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Заглушка деавторизации. В ЛР4 здесь будет JWT",
+		"message": "Заглушка деавторизации",
 	})
 }
