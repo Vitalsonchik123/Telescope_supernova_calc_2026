@@ -7,19 +7,16 @@ import (
 )
 
 // currentUserID — ID пользователя, зафиксированный на всю ЛР3.
-// В ЛР4 заменим на реальную авторизацию через сессии/JWT.
 const currentUserID uint = 1
 
 var currentRepo *repository.Repository
 
-// InitCurrentUser — вызывается один раз при старте приложения,
-// чтобы установить «пользователя по умолчанию» (singleton).
+// InitCurrentUser — вызывается один раз при старте приложения, чтобы установить «пользователя по умолчанию» (singleton).
 func InitCurrentUser(repo *repository.Repository) {
 	currentRepo = repo
 }
 
 // GetCurrentUserID — возвращает ID текущего пользователя.
-// Используется во всех API-методах, где нужно знать создателя.
 func GetCurrentUserID() uint {
 	return currentUserID
 }
