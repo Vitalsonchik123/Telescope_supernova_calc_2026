@@ -19,7 +19,7 @@ func NewRepository(db *gorm.DB) *Repository {
 	return &Repository{db: db}
 }
 
-// GetAll – возвращает только опубликованные услуги
+// GetAll – только опубликованные услуги
 func (r *Repository) GetAll() ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
@@ -29,7 +29,7 @@ func (r *Repository) GetAll() ([]models.Telescope, error) {
 	return telescopes, err
 }
 
-// GetByID – возвращает услугу по ID, если она опубликована
+// GetByID – только опубликованные (для клиентов)
 func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	var telescope models.Telescope
 	err := r.db.
@@ -42,7 +42,7 @@ func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	return &telescope, err
 }
 
-// GetByIDAny – возвращает услугу по ID независимо от статуса (кроме deleted) Для Postman в ЛР3
+// GetByIDAny – независимо от статуса (кроме deleted). Для внутренних проверок.
 func (r *Repository) GetByIDAny(id uint) (*models.Telescope, error) {
 	var t models.Telescope
 	err := r.db.
@@ -72,7 +72,7 @@ func (r *Repository) CreateDraft(t *models.Telescope) error {
 	return r.db.Create(t).Error
 }
 
-// Publish – меняет статус на published
+// Publish – смена статуса
 func (r *Repository) Publish(id uint) error {
 	return r.db.
 		Model(&models.Telescope{}).
@@ -80,13 +80,13 @@ func (r *Repository) Publish(id uint) error {
 		Update("status", "published").Error
 }
 
-// Delete – логическое удаление через SQL UPDATE (без ORM)
+// Delete – логическое удаление через SQL UPDATE
 func (r *Repository) Delete(id uint) error {
 	sql := "UPDATE telescopes SET status = 'deleted' WHERE id = $1"
 	return r.db.Exec(sql, id).Error
 }
 
-// FilterByApertureMin – фильтрация только по опубликованным
+// FilterByApertureMin – фильтрация по диаметру
 func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
@@ -106,7 +106,7 @@ func (r *Repository) GetLikesCount(telescopeID uint) (int64, error) {
 	return count, err
 }
 
-// UpdateFields – обновляет поля через ORM
+// UpdateFields – обновление полей через ORM
 func (r *Repository) UpdateFields(id uint, updates map[string]interface{}) error {
 	return r.db.
 		Model(&models.Telescope{}).
@@ -118,7 +118,7 @@ func (r *Repository) UpdateFields(id uint, updates map[string]interface{}) error
 // ЛР 3
 // ================================================================
 
-// GetUserByID — для singleton-пользователя
+// GetUserByID
 func (r *Repository) GetUserByID(id uint) (*models.User, error) {
 	var user models.User
 	err := r.db.First(&user, id).Error
@@ -139,12 +139,12 @@ func (r *Repository) GetPublishedTelescopes(minAperture int) ([]models.Telescope
 	return telescopes, err
 }
 
-// AddTelescopeImage — сохраняет путь к файлу в MinIO
+// AddTelescopeImage — сохранение ключа файла в БД
 func (r *Repository) AddTelescopeImage(id uint, field string, filename string) error {
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Update(field, filename).Error
 }
 
-// PublishTelescope — смена статуса на published + обновление полей
+// PublishTelescope — смена статуса + обновление полей
 func (r *Repository) PublishTelescope(id uint, updates map[string]interface{}) error {
 	updates["status"] = "published"
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Updates(updates).Error
@@ -161,7 +161,7 @@ func (r *Repository) SetLike(userID, telescopeID uint, like int) error {
 		var existing models.Like
 		err := r.db.Where("user_id = ? AND telescope_id = ?", userID, telescopeID).First(&existing).Error
 		if err == nil {
-			return nil
+			return nil // уже есть
 		}
 		newLike := models.Like{UserID: userID, TelescopeID: telescopeID}
 		return r.db.Create(&newLike).Error
@@ -169,7 +169,7 @@ func (r *Repository) SetLike(userID, telescopeID uint, like int) error {
 	return r.db.Where("user_id = ? AND telescope_id = ?", userID, telescopeID).Delete(&models.Like{}).Error
 }
 
-// RegisterUser — POST /api/users/register
+// RegisterUser
 func (r *Repository) RegisterUser(name string) (*models.User, error) {
 	user := models.User{Name: name}
 	if err := r.db.Create(&user).Error; err != nil {
@@ -178,7 +178,7 @@ func (r *Repository) RegisterUser(name string) (*models.User, error) {
 	return &user, nil
 }
 
-// GetUserByName — для логина
+// GetUserByName — для логина (заглушка)
 func (r *Repository) GetUserByName(name string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("name = ?", name).First(&user).Error

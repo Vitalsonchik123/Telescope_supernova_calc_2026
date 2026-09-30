@@ -1,5 +1,9 @@
 package models
 
+// ================================================================
+// Сериализаторы (DTO) — для передачи данных по API
+// ================================================================
+
 // UserSerializer — безопасный вывод пользователя (без пароля)
 type UserSerializer struct {
 	ID   uint   `json:"id"`
@@ -15,6 +19,7 @@ type TelescopeListSerializer struct {
 	FovDeg      float64 `json:"fov_deg"`
 	ImageURL    string  `json:"image_url"`
 	LikesCount  int     `json:"likes_count"`
+	IsMine      bool    `json:"is_mine"` // 0/1 — создал ли текущий пользователь эту услугу
 }
 
 // TelescopeFullSerializer — подробная информация (с creator)
@@ -24,7 +29,12 @@ type TelescopeFullSerializer struct {
 	ImageURL   string         `json:"image_url"`
 	VideoURL   string         `json:"video_url"`
 	LikesCount int            `json:"likes_count"`
+	IsMine     bool           `json:"is_mine"` // 0/1 — создал ли текущий пользователь
 }
+
+// ================================================================
+// DTO для входящих запросов
+// ================================================================
 
 // CreateTelescopeRequest — что приходит от клиента при POST /api/telescopes
 type CreateTelescopeRequest struct {
@@ -57,6 +67,10 @@ type RegisterRequest struct {
 type LoginRequest struct {
 	Name string `json:"name" binding:"required"`
 }
+
+// ================================================================
+// Форматы ответов
+// ================================================================
 
 // APIError — формат ответа об ошибке
 type APIError struct {
