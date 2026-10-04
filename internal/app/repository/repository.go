@@ -29,7 +29,7 @@ func (r *Repository) GetAll() ([]models.Telescope, error) {
 	return telescopes, err
 }
 
-// GetByID – только опубликованные (для клиентов)
+// GetByID – только опубликованные
 func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	var telescope models.Telescope
 	err := r.db.
@@ -42,7 +42,7 @@ func (r *Repository) GetByID(id uint) (*models.Telescope, error) {
 	return &telescope, err
 }
 
-// GetByIDAny – независимо от статуса (кроме deleted). Для внутренних проверок.
+// GetByIDAny – независимо от статуса (кроме deleted)
 func (r *Repository) GetByIDAny(id uint) (*models.Telescope, error) {
 	var t models.Telescope
 	err := r.db.
@@ -66,13 +66,13 @@ func (r *Repository) GetDraft(userID uint) (*models.Telescope, error) {
 	return &telescope, err
 }
 
-// CreateDraft – создаёт новую услугу со статусом draft
+// CreateDraft
 func (r *Repository) CreateDraft(t *models.Telescope) error {
 	t.Status = "draft"
 	return r.db.Create(t).Error
 }
 
-// Publish – смена статуса
+// Publish
 func (r *Repository) Publish(id uint) error {
 	return r.db.
 		Model(&models.Telescope{}).
@@ -80,13 +80,13 @@ func (r *Repository) Publish(id uint) error {
 		Update("status", "published").Error
 }
 
-// Delete – логическое удаление через SQL UPDATE
+// Delete – через SQL UPDATE
 func (r *Repository) Delete(id uint) error {
 	sql := "UPDATE telescopes SET status = 'deleted' WHERE id = $1"
 	return r.db.Exec(sql, id).Error
 }
 
-// FilterByApertureMin – фильтрация по диаметру
+// FilterByApertureMin
 func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	err := r.db.
@@ -96,7 +96,7 @@ func (r *Repository) FilterByApertureMin(minAperture int) ([]models.Telescope, e
 	return telescopes, err
 }
 
-// GetLikesCount – количество лайков
+// GetLikesCount – общее число лайков у услуги
 func (r *Repository) GetLikesCount(telescopeID uint) (int64, error) {
 	var count int64
 	err := r.db.
@@ -106,7 +106,17 @@ func (r *Repository) GetLikesCount(telescopeID uint) (int64, error) {
 	return count, err
 }
 
-// UpdateFields – обновление полей через ORM
+// HasUserLiked – поставил ли конкретный пользователь лайк услуге
+func (r *Repository) HasUserLiked(userID, telescopeID uint) (bool, error) {
+	var count int64
+	err := r.db.
+		Model(&models.Like{}).
+		Where("user_id = ? AND telescope_id = ?", userID, telescopeID).
+		Count(&count).Error
+	return count > 0, err
+}
+
+// UpdateFields
 func (r *Repository) UpdateFields(id uint, updates map[string]interface{}) error {
 	return r.db.
 		Model(&models.Telescope{}).
@@ -128,7 +138,7 @@ func (r *Repository) GetUserByID(id uint) (*models.User, error) {
 	return &user, nil
 }
 
-// GetPublishedTelescopes — список с фильтром по диаметру
+// GetPublishedTelescopes
 func (r *Repository) GetPublishedTelescopes(minAperture int) ([]models.Telescope, error) {
 	var telescopes []models.Telescope
 	q := r.db.Where("status = ?", "published")
@@ -139,29 +149,29 @@ func (r *Repository) GetPublishedTelescopes(minAperture int) ([]models.Telescope
 	return telescopes, err
 }
 
-// AddTelescopeImage — сохранение ключа файла в БД
+// AddTelescopeImage
 func (r *Repository) AddTelescopeImage(id uint, field string, filename string) error {
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Update(field, filename).Error
 }
 
-// PublishTelescope — смена статуса + обновление полей
+// PublishTelescope
 func (r *Repository) PublishTelescope(id uint, updates map[string]interface{}) error {
 	updates["status"] = "published"
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Updates(updates).Error
 }
 
-// SoftDeleteTelescope — логическое удаление
+// SoftDeleteTelescope
 func (r *Repository) SoftDeleteTelescope(id uint) error {
 	return r.db.Model(&models.Telescope{}).Where("id = ?", id).Update("status", "deleted").Error
 }
 
-// SetLike — поставить/снять лайк
+// SetLike
 func (r *Repository) SetLike(userID, telescopeID uint, like int) error {
 	if like == 1 {
 		var existing models.Like
 		err := r.db.Where("user_id = ? AND telescope_id = ?", userID, telescopeID).First(&existing).Error
 		if err == nil {
-			return nil // уже есть
+			return nil
 		}
 		newLike := models.Like{UserID: userID, TelescopeID: telescopeID}
 		return r.db.Create(&newLike).Error
@@ -178,7 +188,7 @@ func (r *Repository) RegisterUser(name string) (*models.User, error) {
 	return &user, nil
 }
 
-// GetUserByName — для логина (заглушка)
+// GetUserByName
 func (r *Repository) GetUserByName(name string) (*models.User, error) {
 	var user models.User
 	err := r.db.Where("name = ?", name).First(&user).Error

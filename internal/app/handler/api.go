@@ -40,8 +40,10 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 	for _, t := range telescopes {
 		likes, _ := h.Repo.GetLikesCount(t.ID)
 		isMine := t.UserID == currentUserID
+		isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID) // ← новое
+
 		if isMineFilter && !isMine {
-			continue // фильтр «только мои»
+			continue
 		}
 		result = append(result, models.TelescopeListSerializer{
 			ID:          t.ID,
@@ -52,6 +54,7 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 			ImageURL:    h.Repo.GetMinioURL(t.ImageKey),
 			LikesCount:  int(likes),
 			IsMine:      isMine,
+			IsLiked:     isLiked, // ← новое
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": result})
@@ -113,10 +116,12 @@ func (h *Handler) APIFeed(c *gin.Context) {
 	h.renderFeed(c, *tel)
 }
 
-// renderFeed — вспомогательный метод для ленты
+// renderFeed — вспомогательный метод
 func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 	likes, _ := h.Repo.GetLikesCount(t.ID)
 	creator, _ := h.Repo.GetUserByID(t.UserID)
+	currentUserID := auth.GetCurrentUserID()
+	isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID) // ← новое
 
 	full := models.TelescopeFullSerializer{
 		Telescope:  t,
@@ -124,7 +129,8 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 		ImageURL:   h.Repo.GetMinioURL(t.ImageKey),
 		VideoURL:   h.Repo.GetMinioURL(t.VideoKey),
 		LikesCount: int(likes),
-		IsMine:     t.UserID == auth.GetCurrentUserID(),
+		IsMine:     t.UserID == currentUserID,
+		IsLiked:    isLiked, // ← новое
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": full})
 }
@@ -153,7 +159,6 @@ func (h *Handler) APIGetDraft(c *gin.Context) {
 func (h *Handler) APICreateTelescope(c *gin.Context) {
 	userID := auth.GetCurrentUserID()
 
-	// Не более 1 черновика на пользователя
 	existing, _ := h.Repo.GetDraft(userID)
 	if existing != nil {
 		h.apiError(c, http.StatusBadRequest, "У пользователя уже есть черновик")
@@ -181,7 +186,6 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 		return
 	}
 
-	// Загрузка файлов
 	if header, err := c.FormFile("image"); err == nil {
 		filename, err := h.Repo.UploadFile("img", t.ID, header)
 		if err == nil {
@@ -195,7 +199,6 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 		}
 	}
 
-	// Возвращаем созданную запись (ищем независимо от статуса)
 	updated, _ := h.Repo.GetByIDAny(t.ID)
 	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": updated})
 }
@@ -212,7 +215,6 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 	}
 	id := uint(id64)
 
-	// Проверка: услуга существует и принадлежит текущему пользователю
 	tel, err := h.Repo.GetByIDAny(id)
 	if err != nil {
 		h.apiError(c, http.StatusNotFound, "Услуга не найдена")
@@ -223,7 +225,6 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 		return
 	}
 
-	// Читаем тело запроса
 	var req models.PublishTelescopeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		h.apiError(c, http.StatusBadRequest, "Неверный формат: "+err.Error())
@@ -256,7 +257,6 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 	}
 	id := uint(id64)
 
-	// Проверка: услуга существует и принадлежит текущему пользователю
 	tel, err := h.Repo.GetByIDAny(id)
 	if err != nil {
 		h.apiError(c, http.StatusNotFound, "Услуга не найдена")

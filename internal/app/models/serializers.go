@@ -19,7 +19,8 @@ type TelescopeListSerializer struct {
 	FovDeg      float64 `json:"fov_deg"`
 	ImageURL    string  `json:"image_url"`
 	LikesCount  int     `json:"likes_count"`
-	IsMine      bool    `json:"is_mine"` // 0/1 — создал ли текущий пользователь эту услугу
+	IsMine      bool    `json:"is_mine"`  // создал ли текущий пользователь эту услугу
+	IsLiked     bool    `json:"is_liked"` // поставил ли текущий пользователь лайк
 }
 
 // TelescopeFullSerializer — подробная информация (с creator)
@@ -29,7 +30,8 @@ type TelescopeFullSerializer struct {
 	ImageURL   string         `json:"image_url"`
 	VideoURL   string         `json:"video_url"`
 	LikesCount int            `json:"likes_count"`
-	IsMine     bool           `json:"is_mine"` // 0/1 — создал ли текущий пользователь
+	IsMine     bool           `json:"is_mine"`  // создал ли текущий пользователь
+	IsLiked    bool           `json:"is_liked"` // поставил ли текущий пользователь лайк
 }
 
 // ================================================================
