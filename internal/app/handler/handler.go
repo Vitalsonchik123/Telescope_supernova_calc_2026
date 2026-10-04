@@ -219,7 +219,7 @@ func (h *Handler) CreateDraftHandler(c *gin.Context) {
 	c.Redirect(http.StatusFound, "/add")
 }
 
-// PublishHandler – публикация
+// PublishHandler – публикация через SSR
 func (h *Handler) PublishHandler(c *gin.Context) {
 	idStr := c.PostForm("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -230,7 +230,6 @@ func (h *Handler) PublishHandler(c *gin.Context) {
 	id := uint(id64)
 
 	updates := map[string]interface{}{
-		"observatory": c.PostForm("observatory"),
 		"description": c.PostForm("description"),
 		"aperture_cm": atoiSafe(c.PostForm("aperture")),
 		"fov_deg":     parseFloatSafe(c.PostForm("fov")),

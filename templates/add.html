@@ -9,9 +9,6 @@
         <div class="add-form">
 
             {{ if .hasDraft }}
-                <!-- ============================================ -->
-                <!-- ФОРМА ПУБЛИКАЦИИ (когда черновик уже создан) -->
-                <!-- ============================================ -->
                 <form action="/publish" method="POST">
                     <input type="hidden" name="id" value="{{ .telescope.ID }}">
 
@@ -36,9 +33,6 @@
                         <label>Название</label>
                         <input type="text" name="name" value="{{ .telescope.Name }}" readonly>
 
-                        <label>Обсерватория</label>
-                        <input type="text" name="observatory" value="{{ .telescope.Observatory }}">
-
                         <label>Краткое описание</label>
                         <input type="text" name="description" value="{{ .telescope.Description }}">
 
@@ -55,9 +49,6 @@
                 </form>
 
             {{ else }}
-                <!-- ============================================ -->
-                <!-- ФОРМА СОЗДАНИЯ ЧЕРНОВИКА (черновика нет)     -->
-                <!-- ============================================ -->
                 <form action="/create-draft" method="POST">
                     <div class="media-fields">
                         <div class="image-upload">

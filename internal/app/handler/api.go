@@ -10,14 +10,11 @@ import (
 	"supernova-calc/internal/app/models"
 )
 
-// apiError — единый формат ошибки
 func (h *Handler) apiError(c *gin.Context, code int, msg string) {
 	c.JSON(code, models.APIError{Status: "fail", Message: msg})
 }
 
-// ================================================================
 // GET /api/telescopes?min_aperture=100&is_mine=true
-// ================================================================
 func (h *Handler) APIGetTelescopes(c *gin.Context) {
 	minStr := c.Query("min_aperture")
 	minAperture := 0
@@ -40,34 +37,30 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 	for _, t := range telescopes {
 		likes, _ := h.Repo.GetLikesCount(t.ID)
 		isMine := t.UserID == currentUserID
-		isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID) // ← новое
+		isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID)
 
 		if isMineFilter && !isMine {
 			continue
 		}
 		result = append(result, models.TelescopeListSerializer{
-			ID:          t.ID,
-			Name:        t.Name,
-			Observatory: t.Observatory,
-			ApertureCm:  t.ApertureCm,
-			FovDeg:      t.FovDeg,
-			ImageURL:    h.Repo.GetMinioURL(t.ImageKey),
-			LikesCount:  int(likes),
-			IsMine:      isMine,
-			IsLiked:     isLiked, // ← новое
+			ID:         t.ID,
+			Name:       t.Name,
+			ApertureCm: t.ApertureCm,
+			FovDeg:     t.FovDeg,
+			ImageURL:   h.Repo.GetMinioURL(t.ImageKey),
+			LikesCount: int(likes),
+			IsMine:     isMine,
+			IsLiked:    isLiked,
 		})
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": result})
 }
 
-// ================================================================
 // GET /api/feed?id=1&next=true
-// ================================================================
 func (h *Handler) APIFeed(c *gin.Context) {
 	idStr := c.Query("id")
 	next := c.Query("next") == "true"
 
-	// Если ID не передан — берём первый опубликованный
 	if idStr == "" {
 		all, err := h.Repo.GetPublishedTelescopes(0)
 		if err != nil || len(all) == 0 {
@@ -116,12 +109,11 @@ func (h *Handler) APIFeed(c *gin.Context) {
 	h.renderFeed(c, *tel)
 }
 
-// renderFeed — вспомогательный метод
 func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 	likes, _ := h.Repo.GetLikesCount(t.ID)
 	creator, _ := h.Repo.GetUserByID(t.UserID)
 	currentUserID := auth.GetCurrentUserID()
-	isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID) // ← новое
+	isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID)
 
 	full := models.TelescopeFullSerializer{
 		Telescope:  t,
@@ -130,17 +122,14 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 		VideoURL:   h.Repo.GetMinioURL(t.VideoKey),
 		LikesCount: int(likes),
 		IsMine:     t.UserID == currentUserID,
-		IsLiked:    isLiked, // ← новое
+		IsLiked:    isLiked,
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": full})
 }
 
-// ================================================================
 // GET /api/draft
-// ================================================================
 func (h *Handler) APIGetDraft(c *gin.Context) {
 	userID := auth.GetCurrentUserID()
-
 	draft, err := h.Repo.GetDraft(userID)
 	if err != nil {
 		h.apiError(c, http.StatusInternalServerError, "Ошибка БД")
@@ -153,9 +142,7 @@ func (h *Handler) APIGetDraft(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": draft})
 }
 
-// ================================================================
 // POST /api/telescopes
-// ================================================================
 func (h *Handler) APICreateTelescope(c *gin.Context) {
 	userID := auth.GetCurrentUserID()
 
@@ -203,9 +190,7 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": updated})
 }
 
-// ================================================================
 // PUT /api/telescopes/:id/publish
-// ================================================================
 func (h *Handler) APIPublishTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -233,7 +218,6 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 
 	updates := map[string]interface{}{
 		"description": req.Description,
-		"observatory": req.Observatory,
 		"aperture_cm": req.ApertureCm,
 		"fov_deg":     req.FovDeg,
 	}
@@ -245,9 +229,7 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Опубликовано"})
 }
 
-// ================================================================
 // DELETE /api/telescopes/:id
-// ================================================================
 func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -274,9 +256,7 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Услуга удалена"})
 }
 
-// ================================================================
 // POST /api/telescopes/:id/like
-// ================================================================
 func (h *Handler) APILikeTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -305,9 +285,7 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "likes_count": count})
 }
 
-// ================================================================
 // POST /api/users/register
-// ================================================================
 func (h *Handler) APIRegister(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -327,9 +305,6 @@ func (h *Handler) APIRegister(c *gin.Context) {
 	})
 }
 
-// ================================================================
-// POST /api/users/login — заглушка
-// ================================================================
 func (h *Handler) APILogin(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -350,9 +325,6 @@ func (h *Handler) APILogin(c *gin.Context) {
 	})
 }
 
-// ================================================================
-// POST /api/users/logout — заглушка
-// ================================================================
 func (h *Handler) APILogout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
