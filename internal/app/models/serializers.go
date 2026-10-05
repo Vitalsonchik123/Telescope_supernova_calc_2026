@@ -1,9 +1,5 @@
 package models
 
-// ================================================================
-// Сериализаторы для API (JSON)
-// ================================================================
-
 // UserSerializer
 type UserSerializer struct {
 	ID   uint   `json:"id"`
@@ -22,7 +18,7 @@ type TelescopeListSerializer struct {
 	IsLiked    bool    `json:"is_liked"`
 }
 
-// TelescopeFullSerializer — для ленты в API
+// TelescopeFullSerializer — для ленты в API (наследует Telescope → даты в JSON)
 type TelescopeFullSerializer struct {
 	Telescope
 	Creator    UserSerializer `json:"creator"`
@@ -33,10 +29,7 @@ type TelescopeFullSerializer struct {
 	IsLiked    bool           `json:"is_liked"`
 }
 
-// ================================================================
-// DTO для входящих запросов
-// ================================================================
-
+// DTO
 type CreateTelescopeRequest struct {
 	Name        string  `json:"name" binding:"required"`
 	ApertureCm  int     `json:"aperture_cm"`
@@ -62,10 +55,7 @@ type LoginRequest struct {
 	Name string `json:"name" binding:"required"`
 }
 
-// ================================================================
 // Форматы ответов API
-// ================================================================
-
 type APIError struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
@@ -77,7 +67,7 @@ type APISuccess struct {
 	Message string      `json:"message,omitempty"`
 }
 
-// TelescopeView — используется в handler.go для рендеринга HTML
+// TelescopeView — для SSR-шаблонов
 type TelescopeView struct {
 	Telescope
 	ImageURL string

@@ -4,16 +4,14 @@ import (
 	"time"
 )
 
-// User – таблица пользователей
+// User – таблица пользователей (без created_at и updated_at)
 type User struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	Name      string    `gorm:"not null" json:"name"`
-	Password  string    `gorm:"type:varchar(100);default:'stub_password'" json:"-"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID       uint   `gorm:"primaryKey" json:"id"`
+	Name     string `gorm:"not null" json:"name"`
+	Password string `gorm:"type:varchar(100);default:'stub_password'" json:"-"`
 }
 
-// Telescope – таблица услуг (телескопов)
+// Telescope – таблица услуг (с датами создания и формирования)
 type Telescope struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	Name        string    `gorm:"not null" json:"name"`
@@ -29,12 +27,11 @@ type Telescope struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// Like – таблица лайков (многие-ко-многим)
+// Like – таблица лайков (без created_at)
 type Like struct {
 	ID          uint      `gorm:"primaryKey" json:"id"`
 	UserID      uint      `gorm:"not null" json:"user_id"`
 	TelescopeID uint      `gorm:"not null" json:"telescope_id"`
 	User        User      `gorm:"foreignKey:UserID" json:"-"`
 	Telescope   Telescope `gorm:"foreignKey:TelescopeID" json:"-"`
-	CreatedAt   time.Time `json:"created_at"`
 }
