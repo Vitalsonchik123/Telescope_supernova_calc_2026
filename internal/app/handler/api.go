@@ -10,11 +10,25 @@ import (
 	"supernova-calc/internal/app/models"
 )
 
+// apiError — единый формат ошибки
 func (h *Handler) apiError(c *gin.Context, code int, msg string) {
 	c.JSON(code, models.APIError{Status: "fail", Message: msg})
 }
 
-// GET /api/telescopes?min_aperture=100&is_mine=true
+// ================================================================
+// GET /api/telescopes — список с фильтром
+// ================================================================
+
+// APIGetTelescopes godoc
+// @Summary      Список опубликованных телескопов
+// @Description  Возвращает список опубликованных услуг с фильтром по диаметру и автору
+// @Tags         telescopes
+// @Produce      json
+// @Param        min_aperture  query     int   false  "Минимальный диаметр (см)"
+// @Param        is_mine       query     bool  false  "Только мои услуги"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      500  {object}  models.APIError
+// @Router       /telescopes [get]
 func (h *Handler) APIGetTelescopes(c *gin.Context) {
 	minStr := c.Query("min_aperture")
 	minAperture := 0
@@ -56,7 +70,21 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": result})
 }
 
-// GET /api/feed?id=1&next=true
+// ================================================================
+// GET /api/feed — лента
+// ================================================================
+
+// APIFeed godoc
+// @Summary      Лента опубликованных услуг
+// @Description  Возвращает первый опубликованный телескоп или следующий по ID
+// @Tags         telescopes
+// @Produce      json
+// @Param        id    query     int   false  "ID текущего телескопа"
+// @Param        next  query     bool  false  "Перейти к следующему"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      404  {object}  models.APIError
+// @Router       /feed [get]
 func (h *Handler) APIFeed(c *gin.Context) {
 	idStr := c.Query("id")
 	next := c.Query("next") == "true"
@@ -127,7 +155,18 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": full})
 }
 
-// GET /api/draft
+// ================================================================
+// GET /api/draft — черновик
+// ================================================================
+
+// APIGetDraft godoc
+// @Summary      Получить черновик текущего пользователя
+// @Description  Возвращает единственный черновик пользователя (не более 1)
+// @Tags         telescopes
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Failure      500  {object}  models.APIError
+// @Router       /draft [get]
 func (h *Handler) APIGetDraft(c *gin.Context) {
 	userID := auth.GetCurrentUserID()
 	draft, err := h.Repo.GetDraft(userID)
@@ -142,7 +181,23 @@ func (h *Handler) APIGetDraft(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": draft})
 }
 
-// POST /api/telescopes
+// ================================================================
+// POST /api/telescopes — создание черновика
+// ================================================================
+
+// APICreateTelescope godoc
+// @Summary      Создать черновик услуги
+// @Description  Создаёт черновик и загружает картинку + видео в MinIO
+// @Tags         telescopes
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        name   formData  string  true  "Название услуги"
+// @Param        image  formData  file    false "Изображение"
+// @Param        video  formData  file    false "Короткое видео"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      500  {object}  models.APIError
+// @Router       /telescopes [post]
 func (h *Handler) APICreateTelescope(c *gin.Context) {
 	userID := auth.GetCurrentUserID()
 
@@ -190,7 +245,23 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"status": "success", "data": updated})
 }
 
-// PUT /api/telescopes/:id/publish
+// ================================================================
+// PUT /api/telescopes/:id/publish — публикация
+// ================================================================
+
+// APIPublishTelescope godoc
+// @Summary      Опубликовать услугу
+// @Description  Меняет статус черновика на published. Только для автора.
+// @Tags         telescopes
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                           true  "ID услуги"
+// @Param        body  body      models.PublishTelescopeRequest true  "Данные для публикации"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      403  {object}  models.APIError
+// @Failure      404  {object}  models.APIError
+// @Router       /telescopes/{id}/publish [put]
 func (h *Handler) APIPublishTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -229,7 +300,21 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Опубликовано"})
 }
 
-// DELETE /api/telescopes/:id
+// ================================================================
+// DELETE /api/telescopes/:id — soft delete
+// ================================================================
+
+// APIDeleteTelescope godoc
+// @Summary      Логическое удаление услуги
+// @Description  Меняет статус на deleted. Только для автора.
+// @Tags         telescopes
+// @Produce      json
+// @Param        id  path      int  true  "ID услуги"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      403  {object}  models.APIError
+// @Failure      404  {object}  models.APIError
+// @Router       /telescopes/{id} [delete]
 func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -256,7 +341,22 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Услуга удалена"})
 }
 
-// POST /api/telescopes/:id/like
+// ================================================================
+// POST /api/telescopes/:id/like — лайк
+// ================================================================
+
+// APILikeTelescope godoc
+// @Summary      Поставить или снять лайк
+// @Description  Принимает like=1 (поставить) или like=0 (снять)
+// @Tags         telescopes
+// @Accept       json
+// @Produce      json
+// @Param        id    path      int                  true  "ID услуги"
+// @Param        body  body      models.LikeRequest   true  "Данные лайка"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      500  {object}  models.APIError
+// @Router       /telescopes/{id}/like [post]
 func (h *Handler) APILikeTelescope(c *gin.Context) {
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
@@ -285,7 +385,21 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"status": "success", "likes_count": count})
 }
 
-// POST /api/users/register
+// ================================================================
+// POST /api/users/register — регистрация
+// ================================================================
+
+// APIRegister godoc
+// @Summary      Регистрация пользователя
+// @Description  Создаёт нового пользователя
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      models.RegisterRequest  true  "Данные регистрации"
+// @Success      201  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      500  {object}  models.APIError
+// @Router       /users/register [post]
 func (h *Handler) APIRegister(c *gin.Context) {
 	var req models.RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -305,6 +419,21 @@ func (h *Handler) APIRegister(c *gin.Context) {
 	})
 }
 
+// ================================================================
+// POST /api/users/login — аутентификация (заглушка)
+// ================================================================
+
+// APILogin godoc
+// @Summary      Аутентификация (заглушка)
+// @Description  Заглушка авторизации. В ЛР4 здесь будет JWT.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param        body  body      models.LoginRequest  true  "Данные для входа"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      401  {object}  models.APIError
+// @Router       /users/login [post]
 func (h *Handler) APILogin(c *gin.Context) {
 	var req models.LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -325,6 +454,17 @@ func (h *Handler) APILogin(c *gin.Context) {
 	})
 }
 
+// ================================================================
+// POST /api/users/logout — деавторизация (заглушка)
+// ================================================================
+
+// APILogout godoc
+// @Summary      Деавторизация (заглушка)
+// @Description  Заглушка деавторизации. В ЛР4 здесь будет Redis blacklist.
+// @Tags         users
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Router       /users/logout [post]
 func (h *Handler) APILogout(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",

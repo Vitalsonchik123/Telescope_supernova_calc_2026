@@ -1,0 +1,355 @@
+basePath: /api
+definitions:
+  models.APIError:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
+  models.LikeRequest:
+    properties:
+      like:
+        type: integer
+    type: object
+  models.LoginRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  models.PublishTelescopeRequest:
+    properties:
+      aperture_cm:
+        type: integer
+      description:
+        type: string
+      fov_deg:
+        type: number
+    required:
+    - aperture_cm
+    - fov_deg
+    type: object
+  models.RegisterRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@supernova.local
+    name: API Support
+  description: REST API для системы расчёта энергии вспышек сверхновых типа Ia
+  license:
+    name: AS IS (NO WARRANTY)
+  title: Supernova Calc API
+  version: "1.0"
+paths:
+  /draft:
+    get:
+      description: Возвращает единственный черновик пользователя (не более 1)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Получить черновик текущего пользователя
+      tags:
+      - telescopes
+  /feed:
+    get:
+      description: Возвращает первый опубликованный телескоп или следующий по ID
+      parameters:
+      - description: ID текущего телескопа
+        in: query
+        name: id
+        type: integer
+      - description: Перейти к следующему
+        in: query
+        name: next
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Лента опубликованных услуг
+      tags:
+      - telescopes
+  /telescopes:
+    get:
+      description: Возвращает список опубликованных услуг с фильтром по диаметру и
+        автору
+      parameters:
+      - description: Минимальный диаметр (см)
+        in: query
+        name: min_aperture
+        type: integer
+      - description: Только мои услуги
+        in: query
+        name: is_mine
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Список опубликованных телескопов
+      tags:
+      - telescopes
+    post:
+      consumes:
+      - multipart/form-data
+      description: Создаёт черновик и загружает картинку + видео в MinIO
+      parameters:
+      - description: Название услуги
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Изображение
+        in: formData
+        name: image
+        type: file
+      - description: Короткое видео
+        in: formData
+        name: video
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Создать черновик услуги
+      tags:
+      - telescopes
+  /telescopes/{id}:
+    delete:
+      description: Меняет статус на deleted. Только для автора.
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Логическое удаление услуги
+      tags:
+      - telescopes
+  /telescopes/{id}/like:
+    post:
+      consumes:
+      - application/json
+      description: Принимает like=1 (поставить) или like=0 (снять)
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные лайка
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.LikeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Поставить или снять лайк
+      tags:
+      - telescopes
+  /telescopes/{id}/publish:
+    put:
+      consumes:
+      - application/json
+      description: Меняет статус черновика на published. Только для автора.
+      parameters:
+      - description: ID услуги
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для публикации
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.PublishTelescopeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Опубликовать услугу
+      tags:
+      - telescopes
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Заглушка авторизации. В ЛР4 здесь будет JWT.
+      parameters:
+      - description: Данные для входа
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Аутентификация (заглушка)
+      tags:
+      - users
+  /users/logout:
+    post:
+      description: Заглушка деавторизации. В ЛР4 здесь будет Redis blacklist.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Деавторизация (заглушка)
+      tags:
+      - users
+  /users/register:
+    post:
+      consumes:
+      - application/json
+      description: Создаёт нового пользователя
+      parameters:
+      - description: Данные регистрации
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/models.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/models.APIError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.APIError'
+      summary: Регистрация пользователя
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
