@@ -19,16 +19,14 @@ import (
 	_ "supernova-calc/docs"
 )
 
-// RedisClient — глобальный клиент Redis (пригодится для middleware)
 var RedisClient *redisclient.Client
 
 func StartServer() {
 	log.Println("Starting server...")
 
-	// 1. Подключение к БД
 	database.InitDB()
 
-	// 2. Подключение к Redis
+	// Redis
 	ctx := context.Background()
 	redisAddr := os.Getenv("REDIS_HOST") + ":" + os.Getenv("REDIS_PORT")
 	if os.Getenv("REDIS_HOST") == "" {
@@ -46,10 +44,10 @@ func StartServer() {
 	RedisClient = rdb
 	log.Println("Redis connected")
 
-	// 3. Репозиторий
+	// Репозиторий
 	repo := repository.NewRepository(database.DB)
 
-	// 4. MinIO
+	// MinIO
 	err = repo.InitMinio(
 		os.Getenv("MINIO_ENDPOINT"),
 		os.Getenv("MINIO_ACCESS_KEY"),
@@ -60,10 +58,10 @@ func StartServer() {
 		logrus.Fatal("Minio init failed: ", err)
 	}
 
-	// 5. Singleton-пользователь (пока оставляем)
+	// Singleton — оставляем для SSR-части (handler.go)
 	auth.InitCurrentUser(repo)
 
-	// 6. Handler — теперь с Redis
+	// Handler
 	h := handler.NewHandler(repo, rdb)
 
 	r := gin.Default()
@@ -81,22 +79,26 @@ func StartServer() {
 	r.POST("/publish", h.PublishHandler)
 	r.POST("/delete", h.DeleteHandler)
 
-	// ========== API-маршруты (ЛР3) ==========
+	// ========== API-маршруты (ЛР3 + ЛР4) ==========
 	api := r.Group("/api")
 	{
-		// Публичные — доступны без токена
+		// ---------- Публичные (без токена) ----------
 		api.GET("/telescopes", h.APIGetTelescopes)
 		api.GET("/feed", h.APIFeed)
 		api.POST("/users/register", h.APIRegister)
 		api.POST("/users/login", h.APILogin)
 
-		// Защищённые — требуют JWT (пока без middleware, чтобы не ломать ЛР3)
-		api.GET("/draft", h.APIGetDraft)
-		api.POST("/telescopes", h.APICreateTelescope)
-		api.PUT("/telescopes/:id/publish", h.APIPublishTelescope)
-		api.DELETE("/telescopes/:id", h.APIDeleteTelescope)
-		api.POST("/telescopes/:id/like", h.APILikeTelescope)
-		api.POST("/users/logout", h.APILogout)
+		// ---------- Защищённые (требуют JWT) ----------
+		protected := api.Group("")
+		protected.Use(auth.RequireAuth(rdb))
+		{
+			protected.GET("/draft", h.APIGetDraft)
+			protected.POST("/telescopes", h.APICreateTelescope)
+			protected.PUT("/telescopes/:id/publish", h.APIPublishTelescope)
+			protected.DELETE("/telescopes/:id", h.APIDeleteTelescope)
+			protected.POST("/telescopes/:id/like", h.APILikeTelescope)
+			protected.POST("/users/logout", h.APILogout)
+		}
 	}
 
 	port := os.Getenv("SERVER_PORT")

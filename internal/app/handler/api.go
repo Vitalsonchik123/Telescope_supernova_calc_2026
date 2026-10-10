@@ -13,13 +13,12 @@ import (
 	"supernova-calc/internal/app/models"
 )
 
-// apiError — единый формат ошибки
 func (h *Handler) apiError(c *gin.Context, code int, msg string) {
 	c.JSON(code, models.APIError{Status: "fail", Message: msg})
 }
 
 // ================================================================
-// GET /api/telescopes — список с фильтром
+// GET /api/telescopes
 // ================================================================
 
 // APIGetTelescopes godoc
@@ -48,13 +47,17 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 		return
 	}
 
-	currentUserID := auth.GetCurrentUserID()
+	// Гость может смотреть список. Если авторизован — берём user_id из JWT.
+	currentUserID, _ := auth.GetUserIDFromContext(c) // 0, если гость
 
 	var result []models.TelescopeListSerializer
 	for _, t := range telescopes {
 		likes, _ := h.Repo.GetLikesCount(t.ID)
-		isMine := t.UserID == currentUserID
-		isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID)
+		isMine := currentUserID != 0 && t.UserID == currentUserID
+		isLiked := false
+		if currentUserID != 0 {
+			isLiked, _ = h.Repo.HasUserLiked(currentUserID, t.ID)
+		}
 
 		if isMineFilter && !isMine {
 			continue
@@ -74,7 +77,7 @@ func (h *Handler) APIGetTelescopes(c *gin.Context) {
 }
 
 // ================================================================
-// GET /api/feed — лента
+// GET /api/feed
 // ================================================================
 
 // APIFeed godoc
@@ -143,8 +146,12 @@ func (h *Handler) APIFeed(c *gin.Context) {
 func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 	likes, _ := h.Repo.GetLikesCount(t.ID)
 	creator, _ := h.Repo.GetUserByID(t.UserID)
-	currentUserID := auth.GetCurrentUserID()
-	isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID)
+
+	currentUserID, _ := auth.GetUserIDFromContext(c) // 0, если гость
+	isLiked := false
+	if currentUserID != 0 {
+		isLiked, _ = h.Repo.HasUserLiked(currentUserID, t.ID)
+	}
 
 	full := models.TelescopeFullSerializer{
 		Telescope: t,
@@ -156,14 +163,14 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 		ImageURL:   h.Repo.GetMinioURL(t.ImageKey),
 		VideoURL:   h.Repo.GetMinioURL(t.VideoKey),
 		LikesCount: int(likes),
-		IsMine:     t.UserID == currentUserID,
+		IsMine:     currentUserID != 0 && t.UserID == currentUserID,
 		IsLiked:    isLiked,
 	}
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": full})
 }
 
 // ================================================================
-// GET /api/draft — черновик
+// GET /api/draft — защищённый
 // ================================================================
 
 // APIGetDraft godoc
@@ -172,10 +179,16 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 // @Tags         telescopes
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  models.APIError
 // @Failure      500  {object}  models.APIError
 // @Router       /draft [get]
 func (h *Handler) APIGetDraft(c *gin.Context) {
-	userID := auth.GetCurrentUserID()
+	userID, ok := auth.GetUserIDFromContext(c)
+	if !ok {
+		h.apiError(c, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
+
 	draft, err := h.Repo.GetDraft(userID)
 	if err != nil {
 		h.apiError(c, http.StatusInternalServerError, "Ошибка БД")
@@ -189,7 +202,7 @@ func (h *Handler) APIGetDraft(c *gin.Context) {
 }
 
 // ================================================================
-// POST /api/telescopes — создание черновика
+// POST /api/telescopes — защищённый
 // ================================================================
 
 // APICreateTelescope godoc
@@ -202,11 +215,16 @@ func (h *Handler) APIGetDraft(c *gin.Context) {
 // @Param        image  formData  file    false "Изображение"
 // @Param        video  formData  file    false "Короткое видео"
 // @Success      201  {object}  map[string]interface{}
+// @Failure      401  {object}  models.APIError
 // @Failure      400  {object}  models.APIError
 // @Failure      500  {object}  models.APIError
 // @Router       /telescopes [post]
 func (h *Handler) APICreateTelescope(c *gin.Context) {
-	userID := auth.GetCurrentUserID()
+	userID, ok := auth.GetUserIDFromContext(c)
+	if !ok {
+		h.apiError(c, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
 
 	existing, _ := h.Repo.GetDraft(userID)
 	if existing != nil {
@@ -253,7 +271,7 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 }
 
 // ================================================================
-// PUT /api/telescopes/:id/publish — публикация
+// PUT /api/telescopes/:id/publish — защищённый
 // ================================================================
 
 // APIPublishTelescope godoc
@@ -266,10 +284,17 @@ func (h *Handler) APICreateTelescope(c *gin.Context) {
 // @Param        body  body      models.PublishTelescopeRequest true  "Данные для публикации"
 // @Success      200  {object}  map[string]interface{}
 // @Failure      400  {object}  models.APIError
+// @Failure      401  {object}  models.APIError
 // @Failure      403  {object}  models.APIError
 // @Failure      404  {object}  models.APIError
 // @Router       /telescopes/{id}/publish [put]
 func (h *Handler) APIPublishTelescope(c *gin.Context) {
+	userID, ok := auth.GetUserIDFromContext(c)
+	if !ok {
+		h.apiError(c, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
+
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -283,7 +308,7 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 		h.apiError(c, http.StatusNotFound, "Услуга не найдена")
 		return
 	}
-	if tel.UserID != auth.GetCurrentUserID() {
+	if tel.UserID != userID {
 		h.apiError(c, http.StatusForbidden, "Можно публиковать только свои услуги")
 		return
 	}
@@ -308,7 +333,7 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 }
 
 // ================================================================
-// DELETE /api/telescopes/:id — soft delete
+// DELETE /api/telescopes/:id — защищённый
 // ================================================================
 
 // APIDeleteTelescope godoc
@@ -319,10 +344,17 @@ func (h *Handler) APIPublishTelescope(c *gin.Context) {
 // @Param        id  path      int  true  "ID услуги"
 // @Success      200  {object}  map[string]interface{}
 // @Failure      400  {object}  models.APIError
+// @Failure      401  {object}  models.APIError
 // @Failure      403  {object}  models.APIError
 // @Failure      404  {object}  models.APIError
 // @Router       /telescopes/{id} [delete]
 func (h *Handler) APIDeleteTelescope(c *gin.Context) {
+	userID, ok := auth.GetUserIDFromContext(c)
+	if !ok {
+		h.apiError(c, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
+
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -336,7 +368,7 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 		h.apiError(c, http.StatusNotFound, "Услуга не найдена")
 		return
 	}
-	if tel.UserID != auth.GetCurrentUserID() {
+	if tel.UserID != userID {
 		h.apiError(c, http.StatusForbidden, "Можно удалять только свои услуги")
 		return
 	}
@@ -349,7 +381,7 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 }
 
 // ================================================================
-// POST /api/telescopes/:id/like — лайк
+// POST /api/telescopes/:id/like — защищённый
 // ================================================================
 
 // APILikeTelescope godoc
@@ -362,9 +394,16 @@ func (h *Handler) APIDeleteTelescope(c *gin.Context) {
 // @Param        body  body      models.LikeRequest   true  "Данные лайка"
 // @Success      200  {object}  map[string]interface{}
 // @Failure      400  {object}  models.APIError
+// @Failure      401  {object}  models.APIError
 // @Failure      500  {object}  models.APIError
 // @Router       /telescopes/{id}/like [post]
 func (h *Handler) APILikeTelescope(c *gin.Context) {
+	userID, ok := auth.GetUserIDFromContext(c)
+	if !ok {
+		h.apiError(c, http.StatusUnauthorized, "Не авторизован")
+		return
+	}
+
 	idStr := c.Param("id")
 	id64, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
@@ -382,7 +421,6 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 		return
 	}
 
-	userID := auth.GetCurrentUserID()
 	if err := h.Repo.SetLike(userID, uint(id64), req.Like); err != nil {
 		h.apiError(c, http.StatusInternalServerError, "Ошибка лайка")
 		return
@@ -393,7 +431,7 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 }
 
 // ================================================================
-// POST /api/users/register — регистрация
+// POST /api/users/register
 // ================================================================
 
 // APIRegister godoc
@@ -448,7 +486,7 @@ func (h *Handler) APIRegister(c *gin.Context) {
 }
 
 // ================================================================
-// POST /api/users/login — аутентификация
+// POST /api/users/login
 // ================================================================
 
 // APILogin godoc
@@ -500,7 +538,7 @@ func (h *Handler) APILogin(c *gin.Context) {
 }
 
 // ================================================================
-// POST /api/users/logout — деавторизация через Redis blacklist
+// POST /api/users/logout
 // ================================================================
 
 // APILogout godoc
@@ -509,12 +547,10 @@ func (h *Handler) APILogin(c *gin.Context) {
 // @Tags         users
 // @Produce      json
 // @Success      200  {object}  map[string]interface{}
-// @Failure      400  {object}  models.APIError
 // @Failure      401  {object}  models.APIError
 // @Failure      500  {object}  models.APIError
 // @Router       /users/logout [post]
 func (h *Handler) APILogout(c *gin.Context) {
-	// 1. Читаем заголовок Authorization
 	header := c.GetHeader("Authorization")
 	if !strings.HasPrefix(header, "Bearer ") {
 		h.apiError(c, http.StatusUnauthorized, "Отсутствует заголовок Authorization")
@@ -523,14 +559,12 @@ func (h *Handler) APILogout(c *gin.Context) {
 
 	tokenString := strings.TrimPrefix(header, "Bearer ")
 
-	// 2. Парсим токен, чтобы узнать время его истечения
 	claims, err := auth.ParseJWT(tokenString)
 	if err != nil {
 		h.apiError(c, http.StatusUnauthorized, "Неверный токен: "+err.Error())
 		return
 	}
 
-	// 3. Вычисляем TTL — сколько токен ещё будет действителен
 	var ttl time.Duration
 	if claims.ExpiresAt != nil {
 		ttl = time.Until(claims.ExpiresAt.Time)
@@ -538,11 +572,9 @@ func (h *Handler) APILogout(c *gin.Context) {
 			ttl = 0
 		}
 	} else {
-		// Если в токене нет ExpiresAt — ставим максимальный TTL (24 часа)
 		ttl = 24 * time.Hour
 	}
 
-	// 4. Кладём токен в blacklist Redis
 	if err := h.Redis.WriteJWTToBlacklist(c.Request.Context(), tokenString, ttl); err != nil {
 		h.apiError(c, http.StatusInternalServerError, "Ошибка logout: "+err.Error())
 		return
