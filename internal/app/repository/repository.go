@@ -197,3 +197,16 @@ func (r *Repository) GetUserByName(name string) (*models.User, error) {
 	}
 	return &user, nil
 }
+
+// CreateUser — создаёт пользователя (для регистрации)
+func (r *Repository) CreateUser(name, passwordHash, role string) (*models.User, error) {
+	user := models.User{
+		Name:     name,
+		Password: passwordHash,
+		Role:     role,
+	}
+	if err := r.db.Create(&user).Error; err != nil {
+		return nil, err
+	}
+	return &user, nil
+}

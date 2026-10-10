@@ -1,9 +1,10 @@
 package models
 
-// UserSerializer
+// UserSerializer — безопасный вывод пользователя (без пароля)
 type UserSerializer struct {
 	ID   uint   `json:"id"`
 	Name string `json:"name"`
+	Role string `json:"role"`
 }
 
 // TelescopeListSerializer — для списка услуг в API
@@ -18,7 +19,7 @@ type TelescopeListSerializer struct {
 	IsLiked    bool    `json:"is_liked"`
 }
 
-// TelescopeFullSerializer — для ленты в API (наследует Telescope → даты в JSON)
+// TelescopeFullSerializer — для ленты в API
 type TelescopeFullSerializer struct {
 	Telescope
 	Creator    UserSerializer `json:"creator"`
@@ -29,7 +30,7 @@ type TelescopeFullSerializer struct {
 	IsLiked    bool           `json:"is_liked"`
 }
 
-// DTO
+// CreateTelescopeRequest — POST /api/telescopes
 type CreateTelescopeRequest struct {
 	Name        string  `json:"name" binding:"required"`
 	ApertureCm  int     `json:"aperture_cm"`
@@ -37,30 +38,44 @@ type CreateTelescopeRequest struct {
 	Description string  `json:"description"`
 }
 
+// PublishTelescopeRequest — PUT /api/telescopes/:id/publish
 type PublishTelescopeRequest struct {
 	Description string  `json:"description"`
 	ApertureCm  int     `json:"aperture_cm" binding:"required"`
 	FovDeg      float64 `json:"fov_deg" binding:"required"`
 }
 
+// LikeRequest — POST /api/telescopes/:id/like
 type LikeRequest struct {
 	Like int `json:"like"`
 }
 
+// RegisterRequest — POST /api/users/register
 type RegisterRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	Role     string `json:"role"` // опционально, по умолчанию "user"
 }
 
+// LoginRequest — POST /api/users/login
 type LoginRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name     string `json:"name" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }
 
-// Форматы ответов API
+// LoginResponse — ответ на успешный логин
+type LoginResponse struct {
+	Token string         `json:"token"`
+	User  UserSerializer `json:"user"`
+}
+
+// APIError — формат ответа об ошибке
 type APIError struct {
 	Status  string `json:"status"`
 	Message string `json:"message"`
 }
 
+// APISuccess — формат успешного ответа
 type APISuccess struct {
 	Status  string      `json:"status"`
 	Data    interface{} `json:"data,omitempty"`

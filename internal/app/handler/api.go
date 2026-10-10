@@ -3,8 +3,11 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 
 	"supernova-calc/internal/app/auth"
 	"supernova-calc/internal/app/models"
@@ -144,8 +147,12 @@ func (h *Handler) renderFeed(c *gin.Context, t models.Telescope) {
 	isLiked, _ := h.Repo.HasUserLiked(currentUserID, t.ID)
 
 	full := models.TelescopeFullSerializer{
-		Telescope:  t,
-		Creator:    models.UserSerializer{ID: creator.ID, Name: creator.Name},
+		Telescope: t,
+		Creator: models.UserSerializer{
+			ID:   creator.ID,
+			Name: creator.Name,
+			Role: creator.Role,
+		},
 		ImageURL:   h.Repo.GetMinioURL(t.ImageKey),
 		VideoURL:   h.Repo.GetMinioURL(t.VideoKey),
 		LikesCount: int(likes),
@@ -391,7 +398,7 @@ func (h *Handler) APILikeTelescope(c *gin.Context) {
 
 // APIRegister godoc
 // @Summary      Регистрация пользователя
-// @Description  Создаёт нового пользователя
+// @Description  Создаёт нового пользователя с хешированным паролем
 // @Tags         users
 // @Accept       json
 // @Produce      json
@@ -407,7 +414,24 @@ func (h *Handler) APIRegister(c *gin.Context) {
 		return
 	}
 
-	user, err := h.Repo.RegisterUser(req.Name)
+	existing, _ := h.Repo.GetUserByName(req.Name)
+	if existing != nil {
+		h.apiError(c, http.StatusBadRequest, "Пользователь с таким именем уже существует")
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		h.apiError(c, http.StatusInternalServerError, "Ошибка хеширования пароля")
+		return
+	}
+
+	role := req.Role
+	if role == "" {
+		role = "user"
+	}
+
+	user, err := h.Repo.CreateUser(req.Name, string(hash), role)
 	if err != nil {
 		h.apiError(c, http.StatusInternalServerError, "Ошибка регистрации")
 		return
@@ -415,17 +439,21 @@ func (h *Handler) APIRegister(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, gin.H{
 		"status": "success",
-		"data":   models.UserSerializer{ID: user.ID, Name: user.Name},
+		"data": models.UserSerializer{
+			ID:   user.ID,
+			Name: user.Name,
+			Role: user.Role,
+		},
 	})
 }
 
 // ================================================================
-// POST /api/users/login — аутентификация (заглушка)
+// POST /api/users/login — аутентификация
 // ================================================================
 
 // APILogin godoc
-// @Summary      Аутентификация (заглушка)
-// @Description  Заглушка авторизации. В ЛР4 здесь будет JWT.
+// @Summary      Аутентификация
+// @Description  Возвращает JWT-токен при успешном входе
 // @Tags         users
 // @Accept       json
 // @Produce      json
@@ -443,31 +471,85 @@ func (h *Handler) APILogin(c *gin.Context) {
 
 	user, err := h.Repo.GetUserByName(req.Name)
 	if err != nil {
-		h.apiError(c, http.StatusUnauthorized, "Пользователь не найден")
+		h.apiError(c, http.StatusUnauthorized, "Неверное имя или пароль")
+		return
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		h.apiError(c, http.StatusUnauthorized, "Неверное имя или пароль")
+		return
+	}
+
+	token, err := auth.GenerateJWT(user.ID, user.Role)
+	if err != nil {
+		h.apiError(c, http.StatusInternalServerError, "Ошибка генерации токена")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data": models.LoginResponse{
+			Token: token,
+			User: models.UserSerializer{
+				ID:   user.ID,
+				Name: user.Name,
+				Role: user.Role,
+			},
+		},
+	})
+}
+
+// ================================================================
+// POST /api/users/logout — деавторизация через Redis blacklist
+// ================================================================
+
+// APILogout godoc
+// @Summary      Деавторизация
+// @Description  Добавляет JWT в blacklist Redis. Токен больше не действителен.
+// @Tags         users
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  models.APIError
+// @Failure      401  {object}  models.APIError
+// @Failure      500  {object}  models.APIError
+// @Router       /users/logout [post]
+func (h *Handler) APILogout(c *gin.Context) {
+	// 1. Читаем заголовок Authorization
+	header := c.GetHeader("Authorization")
+	if !strings.HasPrefix(header, "Bearer ") {
+		h.apiError(c, http.StatusUnauthorized, "Отсутствует заголовок Authorization")
+		return
+	}
+
+	tokenString := strings.TrimPrefix(header, "Bearer ")
+
+	// 2. Парсим токен, чтобы узнать время его истечения
+	claims, err := auth.ParseJWT(tokenString)
+	if err != nil {
+		h.apiError(c, http.StatusUnauthorized, "Неверный токен: "+err.Error())
+		return
+	}
+
+	// 3. Вычисляем TTL — сколько токен ещё будет действителен
+	var ttl time.Duration
+	if claims.ExpiresAt != nil {
+		ttl = time.Until(claims.ExpiresAt.Time)
+		if ttl < 0 {
+			ttl = 0
+		}
+	} else {
+		// Если в токене нет ExpiresAt — ставим максимальный TTL (24 часа)
+		ttl = 24 * time.Hour
+	}
+
+	// 4. Кладём токен в blacklist Redis
+	if err := h.Redis.WriteJWTToBlacklist(c.Request.Context(), tokenString, ttl); err != nil {
+		h.apiError(c, http.StatusInternalServerError, "Ошибка logout: "+err.Error())
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
-		"message": "Заглушка авторизации. В ЛР4 здесь будет JWT",
-		"data":    models.UserSerializer{ID: user.ID, Name: user.Name},
-	})
-}
-
-// ================================================================
-// POST /api/users/logout — деавторизация (заглушка)
-// ================================================================
-
-// APILogout godoc
-// @Summary      Деавторизация (заглушка)
-// @Description  Заглушка деавторизации. В ЛР4 здесь будет Redis blacklist.
-// @Tags         users
-// @Produce      json
-// @Success      200  {object}  map[string]interface{}
-// @Router       /users/logout [post]
-func (h *Handler) APILogout(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"status":  "success",
-		"message": "Заглушка деавторизации. В ЛР4 здесь будет JWT",
+		"message": "Вы вышли из системы",
 	})
 }
